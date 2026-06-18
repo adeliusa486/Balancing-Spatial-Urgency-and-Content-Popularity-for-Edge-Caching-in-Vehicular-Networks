@@ -57,7 +57,7 @@ def run_benchmark(
         metrics = compute_metrics(result)
         all_metrics.append(metrics)
         logger.info(
-            "%s → hit_rate=%.2f%%  miss_rate=%.2f%%",
+            "%s -> hit_rate=%.2f%%  miss_rate=%.2f%%",
             policy_name,
             metrics.hit_rate * 100,
             metrics.miss_rate * 100,

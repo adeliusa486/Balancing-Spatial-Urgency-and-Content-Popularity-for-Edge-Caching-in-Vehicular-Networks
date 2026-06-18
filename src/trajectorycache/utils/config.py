@@ -34,7 +34,7 @@ def load_config(path: Optional[Path] = None) -> SimulationConfig:
     else:
         logger.info("No config file found; using defaults")
 
-    # Apply env overrides: TC_N_VEHICLES=30 → raw["n_vehicles"] = 30
+    # Apply env overrides: TC_N_VEHICLES=30 -> raw["n_vehicles"] = 30
     for key, value in os.environ.items():
         if key.startswith("TC_"):
             field = key[3:].lower()

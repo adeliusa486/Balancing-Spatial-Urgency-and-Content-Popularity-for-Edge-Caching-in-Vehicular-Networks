@@ -127,9 +127,9 @@ def test_reset_stats(small_cache):
 
 def test_popularity_prune():
     cache = TrajectoryCache(capacity=10, pop_window=10.0)
-    cache.request(0, 100.0, 0.0)   # t=0 — inside window at t=5
-    cache.request(0, 100.0, 5.0)   # t=5 — inside window at t=15? no, 15-10=5 ≥ 0
-    cache.request(0, 100.0, 20.0)  # prune: t=20, cutoff=10 → first two pruned
+    cache.request(0, 100.0, 0.0)   # t=0 - inside window at t=5
+    cache.request(0, 100.0, 5.0)   # t=5 - inside window at t=15? no, 15-10=5  0
+    cache.request(0, 100.0, 20.0)  # prune: t=20, cutoff=10 -> first two pruned
     counts = cache.popularity_counts()
     # Only the t=20 entry survives
     assert counts.get(0, 0) == 1
@@ -142,7 +142,7 @@ def test_popularity_prune():
 
 def test_raw_urgency_nearby_vehicle():
     cache = TrajectoryCache(capacity=10, t_pred=5.0, r_rel=200.0, alpha_d=0.5)
-    # Vehicle at x=300, speed=20, direction=+1 → predicted x=400 → within 200m of 500
+    # Vehicle at x=300, speed=20, direction=+1 -> predicted x=400 -> within 200m of 500
     vehicles = [{"x": 300.0, "speed": 20.0, "direction": 1}]
     urgency = cache._raw_urgency(500.0, vehicles)
     assert urgency > 0.0
@@ -151,7 +151,7 @@ def test_raw_urgency_nearby_vehicle():
 def test_raw_urgency_far_vehicle():
     cache = TrajectoryCache(capacity=10, t_pred=1.0, r_rel=50.0)
     vehicles = [{"x": 0.0, "speed": 5.0, "direction": 1}]
-    # predicted x = 5 → |5 - 5000| >> 50  → no contribution
+    # predicted x = 5 -> |5 - 5000| >> 50  -> no contribution
     urgency = cache._raw_urgency(5000.0, vehicles)
     assert urgency == pytest.approx(0.0)
 

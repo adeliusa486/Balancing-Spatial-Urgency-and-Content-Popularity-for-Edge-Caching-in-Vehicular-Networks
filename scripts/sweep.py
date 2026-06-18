@@ -65,7 +65,7 @@ def main() -> None:
     r_rel_vals  = sweep["r_rel"]
 
     combinations = list(itertools.product(W_values, alpha_vals, r_rel_vals))
-    print(f"Sweeping {len(combinations)} combinations …")
+    print(f"Sweeping {len(combinations)} combinations ")
 
     results = []
     best_hit_rate = -1.0

@@ -21,8 +21,8 @@ def test_lru_evicts_least_recent():
     c = LRUCache(capacity=2)
     c.request(1, 0.0, 0.0)   # insert 1
     c.request(2, 0.0, 1.0)   # insert 2
-    c.request(1, 0.0, 2.0)   # access 1 → 1 is MRU, 2 is LRU
-    c.request(3, 0.0, 3.0)   # insert 3 → should evict 2
+    c.request(1, 0.0, 2.0)   # access 1 -> 1 is MRU, 2 is LRU
+    c.request(3, 0.0, 3.0)   # insert 3 -> should evict 2
     assert 2 not in c
     assert 1 in c
     assert 3 in c
@@ -45,7 +45,7 @@ def test_lfu_evicts_least_frequent():
     c.request(1, 0.0, 0.0)   # freq[1]=1
     c.request(2, 0.0, 1.0)   # freq[2]=1
     c.request(1, 0.0, 2.0)   # freq[1]=2
-    c.request(3, 0.0, 3.0)   # evict item with lowest freq → item 2 (freq=1)
+    c.request(3, 0.0, 3.0)   # evict item with lowest freq -> item 2 (freq=1)
     assert 2 not in c
     assert 1 in c
     assert 3 in c
@@ -97,7 +97,7 @@ def test_fifo_hit_does_not_reset_order():
     c = FIFOCache(capacity=2)
     c.request(1, 0.0, 0.0)
     c.request(2, 0.0, 1.0)
-    c.request(1, 0.0, 2.0)  # hit — should NOT move 1 to back
+    c.request(1, 0.0, 2.0)  # hit - should NOT move 1 to back
     c.request(3, 0.0, 3.0)  # evict: item 1 is still first-in
     assert 1 not in c
 

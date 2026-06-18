@@ -24,21 +24,21 @@ _EPSILON = 1e-6  # numerical safety constant
 
 class TrajectoryCache(BaseCache):
     """
-    TrajectoryCache (TC) — mobility-aware edge cache replacement.
+    TrajectoryCache (TC) - mobility-aware edge cache replacement.
 
     Parameters
     ----------
     capacity : int
         Maximum number of items in the cache (C_max).
     urgency_weight : float
-        W ∈ [0, 1]. Weight assigned to the spatial-urgency component.
-        W = 0 → pure normalized-LFU.  W = 1 → pure urgency-driven.
+        W  [0, 1]. Weight assigned to the spatial-urgency component.
+        W = 0 -> pure normalized-LFU.  W = 1 -> pure urgency-driven.
     pop_window : float
         Sliding time-window duration in seconds for popularity counting (W_pop).
     t_pred : float
         Linear lookahead horizon in seconds for vehicle position extrapolation.
     alpha_d : float
-        Urgency decay constant in s⁻¹ controlling how steeply urgency falls
+        Urgency decay constant in s-1 controlling how steeply urgency falls
         off with increasing time-to-encounter.
     r_rel : float
         Relevance radius in metres. A vehicle's predicted position must fall
@@ -99,7 +99,7 @@ class TrajectoryCache(BaseCache):
             ``direction`` (+1 or -1).
         catalog : dict, optional
             {item_id: location} mapping for all items in the cache (needed only
-            to compute urgency for cached items — a shallow copy is fine).
+            to compute urgency for cached items - a shallow copy is fine).
 
         Returns
         -------
@@ -152,7 +152,7 @@ class TrajectoryCache(BaseCache):
             self._cache[new_id] = CacheItem(item_id=new_id, location=new_loc, timestamp=t)
             return
 
-        # Compute scores for all cached items + new item (set C⁺)
+        # Compute scores for all cached items + new item (set C+)
         extended_catalog = dict(catalog)
         extended_catalog[new_id] = new_loc
 
@@ -170,14 +170,14 @@ class TrajectoryCache(BaseCache):
             del self._cache[victim_id]
             self._cache[new_id] = CacheItem(item_id=new_id, location=new_loc, timestamp=t)
             logger.debug(
-                "Evicted item %d (score=%.4f) → cached item %d (score=%.4f)",
+                "Evicted item %d (score=%.4f) -> cached item %d (score=%.4f)",
                 victim_id,
                 score_victim,
                 new_id,
                 score_new,
             )
         else:
-            # New item is less valuable — discard it
+            # New item is less valuable - discard it
             logger.debug(
                 "Discarded new item %d (score=%.4f); victim %d retained (score=%.4f)",
                 new_id,
@@ -193,7 +193,7 @@ class TrajectoryCache(BaseCache):
         t: float,
     ) -> Dict[int, float]:
         """
-        Compute composite Score(f) for every item in *catalog* (= C⁺).
+        Compute composite Score(f) for every item in *catalog* (= C+).
 
         Score(f) = W * Urgency(f) + (1 - W) * Popularity(f)
         """
@@ -213,18 +213,18 @@ class TrajectoryCache(BaseCache):
         return scores
 
     def _score_all_cached(self, vehicles: dict, current_time: float = 0.0) -> Dict[int, float]:
-        """Score only items currently in the cache (no new item in C⁺)."""
+        """Score only items currently in the cache (no new item in C+)."""
         catalog = {fid: item.location for fid, item in self._cache.items()}
         return self._score_all(catalog, vehicles, current_time)
 
     def _raw_urgency(self, item_loc: float, vehicles: List[dict]) -> float:
         """
-        U_raw(f) = Σ u(v, f)  for vehicles whose predicted position falls
+        U_raw(f) = Sum u(v, f)  for vehicles whose predicted position falls
         within r_rel of item_loc.
 
-        u(v, f) = 1 / (1 + α_d * TTE(v, f))
-        TTE(v, f) = |ℓ_f - x_v| / s_v
-        x̂_v = x_v + s_v * d_v * T_pred
+        u(v, f) = 1 / (1 + alpha_d * TTE(v, f))
+        TTE(v, f) = |l_f - x_v| / s_v
+        xx_hat_v = x_v + s_v * d_v * T_pred
         """
         total = 0.0
         for veh in vehicles:
@@ -256,7 +256,7 @@ class TrajectoryCache(BaseCache):
 
     @staticmethod
     def _popularity_normalize(counts: Dict[int, int]) -> Dict[int, float]:
-        """Normalize popularity counts by the maximum count in C⁺."""
+        """Normalize popularity counts by the maximum count in C+."""
         if not counts:
             return {}
         max_count = max(counts.values())

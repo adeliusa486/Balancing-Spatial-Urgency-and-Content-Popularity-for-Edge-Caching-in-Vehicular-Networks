@@ -2,7 +2,7 @@
 Content catalog and Zipf-distributed request generator.
 
 Content items are geo-tagged (have a fixed location on the highway),
-and requests follow a Zipf popularity distribution — a standard
+and requests follow a Zipf popularity distribution - a standard
 assumption in caching literature.
 """
 from __future__ import annotations
@@ -37,7 +37,7 @@ class ContentCatalog:
     road_length : float
         Highway length used to distribute item locations.
     zipf_alpha : float
-        Zipf skew parameter (higher → more concentrated popularity).
+        Zipf skew parameter (higher -> more concentrated popularity).
     seed : int, optional
         RNG seed.
     """

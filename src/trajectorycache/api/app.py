@@ -3,12 +3,12 @@ TrajectoryCache REST API.
 
 Endpoints
 ---------
-GET  /health                  — liveness probe
-GET  /cache/status            — current cache state + stats
-POST /cache/request           — simulate a content request
-POST /cache/reset             — clear cache + stats
-POST /simulation/run          — run a full benchmark
-GET  /simulation/results      — retrieve last benchmark results
+GET  /health                  - liveness probe
+GET  /cache/status            - current cache state + stats
+POST /cache/request           - simulate a content request
+POST /cache/reset             - clear cache + stats
+POST /simulation/run          - run a full benchmark
+GET  /simulation/results      - retrieve last benchmark results
 """
 from __future__ import annotations
 

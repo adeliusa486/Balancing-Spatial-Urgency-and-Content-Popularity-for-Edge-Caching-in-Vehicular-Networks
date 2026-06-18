@@ -17,7 +17,7 @@ def _check_matplotlib() -> bool:
         import matplotlib  # noqa: F401
         return True
     except ImportError:
-        logger.warning("matplotlib not installed — plotting disabled")
+        logger.warning("matplotlib not installed - plotting disabled")
         return False
 
 

@@ -1,5 +1,5 @@
 """
-TrajectoryCache — Spatial-urgency-aware edge cache for vehicular networks.
+TrajectoryCache - Spatial-urgency-aware edge cache for vehicular networks.
 
 Quick start
 -----------

@@ -54,7 +54,7 @@ class HighwaySimulation:
     dt : float
         Time step in seconds.
     mean_speed : float
-        Mean vehicle speed (m/s). Default ≈ 90 km/h.
+        Mean vehicle speed (m/s). Default ~ 90 km/h.
     speed_std : float
         Standard deviation of vehicle speeds (m/s).
     seed : int, optional

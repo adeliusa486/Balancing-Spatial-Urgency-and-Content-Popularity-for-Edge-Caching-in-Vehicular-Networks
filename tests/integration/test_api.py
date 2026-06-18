@@ -123,7 +123,7 @@ def test_simulation_results_after_run():
 
 
 def test_simulation_results_404_before_run():
-    # Reload a fresh app state — workaround: just call the endpoint
+    # Reload a fresh app state - workaround: just call the endpoint
     # If results exist from prior test, this will pass; we test the 404 indirectly
     r = client.get("/simulation/results")
     assert r.status_code in (200, 404)
