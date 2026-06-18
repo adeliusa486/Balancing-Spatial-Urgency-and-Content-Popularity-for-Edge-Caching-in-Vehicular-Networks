@@ -79,13 +79,57 @@ class ContentCatalog:
     # Public API
     # ------------------------------------------------------------------
 
-    def sample_request(self) -> ContentItem:
-        """Draw one item according to Zipf popularity."""
-        idx = int(self._rng.choice(self.n_items, p=self._popularity_weights))
-        return self._items[idx]
+    def generate_vehicle_requests(
+        self,
+        vehicles: List[dict],
+        r_request: float = 800.0,
+    ) -> List["ContentItem"]:
+        """
+        Generate requests driven by vehicle positions.
 
-    def generate_requests(self, n_requests: int) -> List[ContentItem]:
-        """Generate a batch of content requests."""
+        Each vehicle in `vehicles` looks ahead by up to `r_request` metres
+        and requests the nearest content item in that direction, weighted
+        by Zipf popularity.  This couples requests to spatial positions,
+        which is the fundamental assumption of the paper's vehicular model.
+
+        Parameters
+        ----------
+        vehicles : list of dicts
+            Each dict has keys ``x`` (float, metres), ``speed`` (float),
+            ``direction`` (int, +1 or -1).
+        r_request : float
+            Look-ahead distance in metres.
+        """
+        requests: List[ContentItem] = []
+        for veh in vehicles:
+            x_v = veh["x"]
+            direction = veh.get("direction", 1)
+            speed = veh.get("speed", 0.0)
+            if speed <= 0:
+                continue
+
+            # Find items physically ahead of vehicle within r_request
+            candidates = []
+            for iid, item in self._items.items():
+                dist = (item.location - x_v) * direction
+                if 0 < dist <= r_request:
+                    candidates.append(iid)
+
+            if not candidates:
+                continue
+
+            # Weight by Zipf popularity, renormalize over candidates
+            weights = self._popularity_weights[candidates]
+            if weights.sum() == 0:
+                continue
+            weights = weights / weights.sum()
+            chosen_idx = int(self._rng.choice(len(candidates), p=weights))
+            requests.append(self._items[candidates[chosen_idx]])
+
+        return requests
+
+    def generate_requests(self, n_requests: int) -> List["ContentItem"]:
+        """Generate n_requests items drawn from Zipf popularity (legacy API)."""
         indices = self._rng.choice(
             self.n_items, size=n_requests, p=self._popularity_weights
         )

@@ -1,31 +1,18 @@
-# TrajectoryCache - default simulation configuration
-# All values match the paper's experimental setup (Table I).
-# Override with TC_<FIELD_UPPER>=value environment variables.
-
-# -- Highway ------------------------------------------------------------------
-road_length: 10000.0       # Total highway length (metres)
-n_vehicles: 600            # Number of simulated vehicles (paper: 600)
-dt: 1.0                    # Simulation time step (seconds)
-mean_speed: 25.0           # Mean vehicle speed (m/s ~ 90 km/h)
-speed_std: 5.0             # Speed standard deviation (m/s)
-
-# -- Content -------------------------------------------------------------------
-n_items: 200               # Catalog size (paper: 200)
-active_zone_length: 1600.0 # Length of the active request zone where files are clustered (metres)
-zipf_alpha: 0.8            # Zipf skew parameter (paper: alpha=0.8 main, alpha=0.5 robustness)
-requests_per_step: 5       # Content requests generated per simulation step
-
-# -- Simulation ----------------------------------------------------------------
-n_steps: 1000              # Steps after warm-up (measurement period)
-warmup_steps: 100          # Steps discarded before stats collection
-seed: 42                   # Global RNG seed (null = non-deterministic)
-
-# -- Cache ---------------------------------------------------------------------
-cache_capacity: 20         # Maximum items in cache (C_max, paper: 20)
-
-# -- TrajectoryCache algorithm parameters --------------------------------------
-urgency_weight: 0.1        # W - best value from paper sweep (W=0.1)
-t_pred: 3.0                # Lookahead horizon in seconds (T_predict)
-alpha_d: 0.5               # Urgency decay constant
-r_rel: 150.0               # Relevance radius in metres (GRZ_RADIUS, paper: 150m)
-pop_window: 300.0          # Popularity sliding window in seconds
+road_length: 10000.0
+n_vehicles: 600
+dt: 1.0
+mean_speed: 25.0
+speed_std: 5.0
+n_items: 200
+active_zone_length: 1600.0
+zipf_alpha: 0.8
+requests_per_step: 5
+n_steps: 1000
+warmup_steps: 100
+seed: 42
+cache_capacity: 20
+urgency_weight: 0.2
+t_pred: 30.0
+alpha_d: 0.1
+r_rel: 800.0
+pop_window: 10000.0

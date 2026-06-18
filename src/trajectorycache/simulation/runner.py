@@ -25,6 +25,8 @@ class SimulationConfig:
     dt: float = 1.0
     mean_speed: float = 25.0
     speed_std: float = 5.0
+    platoon_size: int = 10       # vehicles per platoon (SUMO Krauss-like clustering)
+    platoon_gap: float = 30.0   # max positional spread within platoon (metres)
 
     # Content
     n_items: int = 200
@@ -88,6 +90,8 @@ class SimulationRunner:
             dt=self.cfg.dt,
             mean_speed=self.cfg.mean_speed,
             speed_std=self.cfg.speed_std,
+            platoon_size=self.cfg.platoon_size,
+            platoon_gap=self.cfg.platoon_gap,
             seed=self.cfg.seed,
         )
         self.catalog = ContentCatalog(
@@ -118,7 +122,9 @@ class SimulationRunner:
             if step == self.cfg.warmup_steps:
                 self.cache.reset_stats()
 
-            # Generate requests for this step
+            # Generate content requests for this step.
+            # Using a fixed rate per step (as in the paper's SimPy model) so
+            # all policies see the same request volume and frequency distribution.
             requests = self.catalog.generate_requests(self.cfg.requests_per_step)
 
             step_hits = 0

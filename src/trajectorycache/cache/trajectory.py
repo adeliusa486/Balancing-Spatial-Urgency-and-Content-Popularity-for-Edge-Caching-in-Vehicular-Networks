@@ -50,11 +50,11 @@ class TrajectoryCache(BaseCache):
     def __init__(
         self,
         capacity: int,
-        urgency_weight: float = 0.1,
+        urgency_weight: float = 0.2,
         pop_window: float = 300.0,
-        t_pred: float = 3.0,
-        alpha_d: float = 0.5,
-        r_rel: float = 150.0,
+        t_pred: float = 30.0,
+        alpha_d: float = 0.1,
+        r_rel: float = 800.0,
     ) -> None:
         super().__init__(capacity)
 
@@ -152,39 +152,36 @@ class TrajectoryCache(BaseCache):
             self._cache[new_id] = CacheItem(item_id=new_id, location=new_loc, timestamp=t)
             return
 
-        # Compute scores for all cached items + new item (set C+)
+        # Compute composite scores for all cached items plus the new item (set C+).
+        # Per the paper algorithm: evict the lowest-scoring cached item ONLY if
+        # the new item scores higher. Otherwise discard the new item.
         extended_catalog = dict(catalog)
         extended_catalog[new_id] = new_loc
-
         scores = self._score_all(extended_catalog, vehicles, t)
 
         victim_id = min(
-            (item_id for item_id in self._cache),
+            self._cache,
             key=lambda i: scores.get(i, 0.0),
         )
         score_victim = scores.get(victim_id, 0.0)
         score_new = scores.get(new_id, 0.0)
 
         if score_victim < score_new:
-            # Evict victim and cache new item
             del self._cache[victim_id]
             self._cache[new_id] = CacheItem(item_id=new_id, location=new_loc, timestamp=t)
             logger.debug(
                 "Evicted item %d (score=%.4f) -> cached item %d (score=%.4f)",
-                victim_id,
-                score_victim,
-                new_id,
-                score_new,
+                victim_id, score_victim, new_id, score_new,
             )
         else:
-            # New item is less valuable - discard it
+            # New item is less spatially/historically valuable than all cached items.
+            # Discard it without caching (key advantage over LFU: avoids polluting
+            # the cache with items that have no urgency AND low popularity).
             logger.debug(
-                "Discarded new item %d (score=%.4f); victim %d retained (score=%.4f)",
-                new_id,
-                score_new,
-                victim_id,
-                score_victim,
+                "Discarded new item %d (score=%.4f); victim %d retained",
+                new_id, score_new, victim_id,
             )
+
 
     def _score_all(
         self,
@@ -196,15 +193,27 @@ class TrajectoryCache(BaseCache):
         Compute composite Score(f) for every item in *catalog* (= C+).
 
         Score(f) = W * Urgency(f) + (1 - W) * Popularity(f)
+
+        Popularity is normalized against the global request maximum across ALL
+        tracked items (not just C+). This ensures new items are not unfairly
+        penalized against cached items that have accumulated counts while being
+        served, which would cause TC to always discard new items.
         """
         # --- Spatial urgency ---
         raw_urgency = {fid: self._raw_urgency(loc, vehicles) for fid, loc in catalog.items()}
         urgency_norm = self._min_max_normalize(raw_urgency)
 
-        # --- Historical popularity ---
+        # --- Historical popularity (globally normalized) ---
         with self._lock:
             pop_counts = {fid: len(self._req_times[fid]) for fid in catalog}
-        pop_norm = self._popularity_normalize(pop_counts)
+            # Use the global maximum across ALL tracked items so that new items
+            # are judged against the same baseline as cached items.
+            global_max = max(
+                (len(dq) for dq in self._req_times.values()),
+                default=1,
+            )
+        denom = global_max + _EPSILON
+        pop_norm = {fid: pop_counts[fid] / denom for fid in catalog}
 
         # --- Composite score ---
         scores: Dict[int, float] = {}

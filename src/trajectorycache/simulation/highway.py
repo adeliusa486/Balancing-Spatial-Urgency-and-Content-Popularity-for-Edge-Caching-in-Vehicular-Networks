@@ -68,6 +68,8 @@ class HighwaySimulation:
         dt: float = 1.0,
         mean_speed: float = 25.0,
         speed_std: float = 5.0,
+        platoon_size: int = 10,
+        platoon_gap: float = 30.0,
         seed: Optional[int] = None,
     ) -> None:
         self.road_length = road_length
@@ -75,6 +77,8 @@ class HighwaySimulation:
         self.dt = dt
         self.mean_speed = mean_speed
         self.speed_std = speed_std
+        self.platoon_size = max(1, platoon_size)
+        self.platoon_gap = platoon_gap
         self.t: float = 0.0
 
         rng = np.random.default_rng(seed)
@@ -85,12 +89,50 @@ class HighwaySimulation:
     # ------------------------------------------------------------------
 
     def _spawn_vehicles(self, rng: np.random.Generator) -> List[Vehicle]:
+        """
+        Spawn vehicles in platoons.
+
+        Vehicles are grouped into platoons of `platoon_size`. All members of a
+        platoon share the same speed and direction, positioned within
+        `platoon_gap` metres of the platoon leader. This approximates the
+        emergent clustering produced by SUMO's Krauss car-following model.
+        """
         vehicles = []
-        for vid in range(self.n_vehicles):
-            speed = float(np.clip(rng.normal(self.mean_speed, self.speed_std), 5.0, 50.0))
+        vid = 0
+        n_platoons = max(1, self.n_vehicles // self.platoon_size)
+
+        for _ in range(n_platoons):
+            # Platoon leader properties
+            leader_x = float(rng.uniform(0, self.road_length))
+            leader_speed = float(
+                np.clip(rng.normal(self.mean_speed, self.speed_std), 5.0, 50.0)
+            )
             direction = int(rng.choice([-1, 1]))
-            x = float(rng.uniform(0, self.road_length))
-            vehicles.append(Vehicle(vehicle_id=vid, x=x, speed=speed, direction=direction))
+
+            for i in range(self.platoon_size):
+                if vid >= self.n_vehicles:
+                    break
+                # Small offset within the platoon (tight cluster)
+                offset = float(rng.uniform(-self.platoon_gap, self.platoon_gap))
+                x = (leader_x + offset) % self.road_length
+                # Tiny speed variation within platoon (Krauss-like following)
+                speed = float(
+                    np.clip(
+                        leader_speed * rng.normal(1.0, 0.03),
+                        5.0,
+                        50.0,
+                    )
+                )
+                vehicles.append(
+                    Vehicle(
+                        vehicle_id=vid,
+                        x=x,
+                        speed=speed,
+                        direction=direction,
+                    )
+                )
+                vid += 1
+
         return vehicles
 
     def step(self) -> List[dict]:
