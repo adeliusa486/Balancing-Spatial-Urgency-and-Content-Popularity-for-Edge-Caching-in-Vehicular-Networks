@@ -129,7 +129,7 @@ def main() -> None:
     for name, fn in tests:
         record(name, fn)
 
-    # ── Summary ──────────────────────────────────────────────────────────
+    # -- Summary ----------------------------------------------------------
     passed = sum(1 for r in RESULTS if r["status"] == "PASS")
     failed = sum(1 for r in RESULTS if r["status"] == "FAIL")
 
@@ -137,7 +137,7 @@ def main() -> None:
     print(f"  PASSED: {passed}/{len(RESULTS)}   FAILED: {failed}/{len(RESULTS)}")
     print(f"{'='*55}\n")
 
-    # ── Write SMOKE_TEST_REPORT.md ────────────────────────────────────────
+    # -- Write SMOKE_TEST_REPORT.md ----------------------------------------
     report_path = ROOT / "SMOKE_TEST_REPORT.md"
     lines = [
         "# Smoke Test Report\n",
@@ -146,7 +146,7 @@ def main() -> None:
         "|------|--------|-----------|",
     ]
     for r in RESULTS:
-        icon = "✅" if r["status"] == "PASS" else "❌"
+        icon = "[PASS]" if r["status"] == "PASS" else "[FAIL]"
         lines.append(f"| {r['test']} | {icon} {r['status']} | {r['elapsed_s']*1000:.1f} |")
 
     if failed:
@@ -158,7 +158,7 @@ def main() -> None:
     lines.append("\n## Environment\n")
     lines.append(f"- Python: {sys.version.split()[0]}")
     lines.append("- All core modules imported successfully" if passed == len(RESULTS)
-                 else "- Some modules failed — see failures above")
+                 else "- Some modules failed - see failures above")
 
     report_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"Report written to: {report_path}\n")
