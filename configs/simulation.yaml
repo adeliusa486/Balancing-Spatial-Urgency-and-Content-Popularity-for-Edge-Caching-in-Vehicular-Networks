@@ -1,18 +1,19 @@
-road_length: 10000.0
-n_vehicles: 600
-dt: 1.0
-mean_speed: 25.0
-speed_std: 5.0
-n_items: 200
-active_zone_length: 1600.0
-zipf_alpha: 0.8
-requests_per_step: 5
-n_steps: 1000
-warmup_steps: 100
-seed: 42
-cache_capacity: 20
-urgency_weight: 0.2
-t_pred: 30.0
-alpha_d: 0.1
-r_rel: 800.0
-pop_window: 10000.0
+road_length:        10000.0   # Total highway length (metres)
+active_zone_length:  1600.0   # Active zone bounding content items (metres)
+n_vehicles:           200     # Simulated vehicles (reduced for speed)
+n_items:              200     # Content catalog size
+n_steps:              300     # Measurement steps (after warmup)
+warmup_steps:         100     # Steps before stats reset
+dt:                   1.0     # Time step (seconds)
+mean_speed:           25.0    # Mean vehicle speed (m/s ~ 90 km/h)
+speed_std:             5.0    # Speed std dev (m/s)
+platoon_size:          10     # Vehicles per platoon
+platoon_gap:          30.0    # Max spread within platoon (metres)
+cache_capacity:        20     # Cache size = 10% of catalog
+zipf_alpha:           0.8     # Zipf skew (paper: 0.8 and 0.5)
+urgency_weight:       0.2     # W — optimal from sweep
+r_rel:               800.0    # Relevance radius (m)
+t_pred:               30.0    # Look-ahead horizon (s)
+alpha_d:               0.1    # Urgency decay constant (s^-1)
+pop_window:          300.0    # Sliding window for popularity (s)
+seed:                  42     # Default seed

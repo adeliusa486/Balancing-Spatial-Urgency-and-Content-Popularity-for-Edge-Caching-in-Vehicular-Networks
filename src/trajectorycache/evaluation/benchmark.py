@@ -13,13 +13,13 @@ from .metrics import EvalMetrics, compare_policies, compute_metrics, print_compa
 
 logger = logging.getLogger(__name__)
 
-# Default policies to benchmark
+# Default policies to benchmark (parameters match configs/simulation.yaml)
 DEFAULT_POLICIES = [
-    ("trajectory", {"urgency_weight": 0.5}),
-    ("lru", {}),
-    ("lfu", {}),
-    ("random", {}),
-    ("fifo", {}),
+    ("trajectory", {"urgency_weight": 0.2}),
+    ("lfu",        {"pop_window": 300.0}),
+    ("lru",        {}),
+    ("random",     {}),
+    ("fifo",       {}),
 ]
 
 

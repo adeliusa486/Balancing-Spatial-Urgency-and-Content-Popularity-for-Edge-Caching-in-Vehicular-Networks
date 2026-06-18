@@ -71,6 +71,10 @@ class TrajectoryCache(BaseCache):
         self._req_times: Dict[int, deque] = defaultdict(deque)
         self._lock = threading.Lock()
 
+        # Step-level memoization for urgency
+        self._last_t = -1.0
+        self._urgency_cache: Dict[float, float] = {}
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -200,7 +204,7 @@ class TrajectoryCache(BaseCache):
         served, which would cause TC to always discard new items.
         """
         # --- Spatial urgency ---
-        raw_urgency = {fid: self._raw_urgency(loc, vehicles) for fid, loc in catalog.items()}
+        raw_urgency = {fid: self._raw_urgency(loc, vehicles, t) for fid, loc in catalog.items()}
         urgency_norm = self._min_max_normalize(raw_urgency)
 
         # --- Historical popularity (globally normalized) ---
@@ -226,7 +230,7 @@ class TrajectoryCache(BaseCache):
         catalog = {fid: item.location for fid, item in self._cache.items()}
         return self._score_all(catalog, vehicles, current_time)
 
-    def _raw_urgency(self, item_loc: float, vehicles: List[dict]) -> float:
+    def _raw_urgency(self, item_loc: float, vehicles: List[dict], t: float) -> float:
         """
         U_raw(f) = Sum u(v, f)  for vehicles whose predicted position falls
         within r_rel of item_loc.
@@ -235,6 +239,13 @@ class TrajectoryCache(BaseCache):
         TTE(v, f) = |l_f - x_v| / s_v
         xx_hat_v = x_v + s_v * d_v * T_pred
         """
+        if t != self._last_t:
+            self._last_t = t
+            self._urgency_cache.clear()
+
+        if item_loc in self._urgency_cache:
+            return self._urgency_cache[item_loc]
+
         total = 0.0
         for veh in vehicles:
             x_v = veh["x"]
@@ -251,6 +262,8 @@ class TrajectoryCache(BaseCache):
             tte = abs(item_loc - x_v) / speed
             u = 1.0 / (1.0 + self.alpha_d * tte)
             total += u
+            
+        self._urgency_cache[item_loc] = total
         return total
 
     @staticmethod
@@ -263,14 +276,6 @@ class TrajectoryCache(BaseCache):
         span = hi - lo + _EPSILON
         return {k: (v - lo) / span for k, v in raw.items()}
 
-    @staticmethod
-    def _popularity_normalize(counts: Dict[int, int]) -> Dict[int, float]:
-        """Normalize popularity counts by the maximum count in C+."""
-        if not counts:
-            return {}
-        max_count = max(counts.values())
-        denom = max_count + _EPSILON
-        return {k: v / denom for k, v in counts.items()}
 
     def _prune_request_window(self, current_time: float) -> None:
         """Remove request timestamps older than pop_window from all queues."""

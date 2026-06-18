@@ -32,7 +32,7 @@ class SimulationConfig:
     n_items: int = 200
     active_zone_length: float = 1600.0
     zipf_alpha: float = 0.8
-    requests_per_step: int = 5
+    r_rel: float = 800.0        # relevance radius (m): vehicle look-ahead for requests
 
     # Simulation
     n_steps: int = 1_000
@@ -122,11 +122,17 @@ class SimulationRunner:
             if step == self.cfg.warmup_steps:
                 self.cache.reset_stats()
 
-            # Generate content requests for this step.
-            # Using a fixed rate per step (as in the paper's SimPy model) so
-            # all policies see the same request volume and frequency distribution.
-            requests = self.catalog.generate_requests(self.cfg.requests_per_step)
+            # Generate content requests driven by vehicle positions.
+            # Each vehicle looks ahead by r_request metres and requests the
+            # nearest spatially relevant item, weighted by Zipf popularity.
+            # This spatial coupling is the core assumption of the paper:
+            # vehicles request content that is physically ahead of them.
+            requests = self.catalog.generate_vehicle_requests(
+                vehicles=vehicles,
+                r_request=self.cfg.r_rel,
+            )
 
+            n_requests = max(len(requests), 1)  # avoid division by zero
             step_hits = 0
             for item in requests:
                 hit = self.cache.request(
@@ -139,8 +145,8 @@ class SimulationRunner:
                 if hit:
                     step_hits += 1
 
-            if step >= self.cfg.warmup_steps:
-                per_step_hit_rate.append(step_hits / self.cfg.requests_per_step)
+            if step >= self.cfg.warmup_steps and n_requests > 0:
+                per_step_hit_rate.append(step_hits / n_requests)
 
             if verbose and step % 100 == 0:
                 logger.info(
