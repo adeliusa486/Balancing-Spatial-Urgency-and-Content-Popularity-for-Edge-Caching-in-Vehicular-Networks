@@ -11,6 +11,7 @@ speed_std: 5.0             # Speed standard deviation (m/s)
 
 # -- Content -------------------------------------------------------------------
 n_items: 200               # Catalog size (paper: 200)
+active_zone_length: 1600.0 # Length of the active request zone where files are clustered (metres)
 zipf_alpha: 0.8            # Zipf skew parameter (paper: alpha=0.8 main, alpha=0.5 robustness)
 requests_per_step: 5       # Content requests generated per simulation step
 

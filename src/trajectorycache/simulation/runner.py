@@ -28,6 +28,7 @@ class SimulationConfig:
 
     # Content
     n_items: int = 200
+    active_zone_length: float = 1600.0
     zipf_alpha: float = 0.8
     requests_per_step: int = 5
 
@@ -92,6 +93,7 @@ class SimulationRunner:
         self.catalog = ContentCatalog(
             n_items=self.cfg.n_items,
             road_length=self.cfg.road_length,
+            active_zone_length=self.cfg.active_zone_length,
             zipf_alpha=self.cfg.zipf_alpha,
             seed=self.cfg.seed,
         )

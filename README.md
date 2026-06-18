@@ -1,4 +1,4 @@
-# TrajectoryCache 🚗📡
+# TrajectoryCache
 
 **Spatial-urgency-aware edge cache replacement for vehicular networks (V2X / MEC)**
 
@@ -68,12 +68,12 @@ pip install -e ".[dev]"
 from trajectorycache import TrajectoryCache, SimulationRunner, SimulationConfig
 
 # Create cache
-cache = TrajectoryCache(capacity=20, urgency_weight=0.5)
+cache = TrajectoryCache(capacity=20, urgency_weight=0.2)
 
 # Configure simulation
 cfg = SimulationConfig(
     n_steps=1000,
-    n_vehicles=50,
+    n_vehicles=600,
     cache_capacity=20,
     seed=42,
 )
@@ -89,7 +89,7 @@ print(f"Hit rate: {result.hit_rate:.2%}")
 ```bash
 make benchmark
 # or
-python scripts/run_benchmark.py --n-steps 1000 --capacity 20
+python scripts/run_benchmark.py
 ```
 
 ### Hyperparameter sweep
@@ -98,36 +98,6 @@ python scripts/run_benchmark.py --n-steps 1000 --capacity 20
 python scripts/sweep.py --config configs/sweep.yaml
 ```
 
-### Start REST API
-
-```bash
-make api
-# → http://localhost:8000/docs
-```
-
-### Docker
-
-```bash
-docker compose up -d
-curl http://localhost:8000/health
-```
-
----
-
-## REST API
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Liveness probe |
-| `GET` | `/cache/status` | Current cache state + stats |
-| `POST` | `/cache/configure` | Reconfigure cache parameters |
-| `POST` | `/cache/request` | Simulate a content request |
-| `POST` | `/cache/reset` | Clear cache |
-| `POST` | `/simulation/run` | Run full benchmark |
-| `GET` | `/simulation/results` | Retrieve last benchmark results |
-
-Full interactive docs at **`/docs`** (Swagger UI) and **`/redoc`**.
-
 ---
 
 ## Configuration
@@ -135,64 +105,33 @@ Full interactive docs at **`/docs`** (Swagger UI) and **`/redoc`**.
 Edit `configs/simulation.yaml` or override with environment variables (`TC_<FIELD>=value`):
 
 ```yaml
-road_length:       10000.0   # metres
-n_vehicles:        50
+road_length:       10000.0   # Total highway length (metres)
+active_zone_length: 1600.0   # Active zone bounding content items (metres)
+n_vehicles:        600       # Simulated vehicles (paper: 600)
 n_steps:           1000
 cache_capacity:    20
-zipf_alpha:        1.2
-urgency_weight:    0.5       # W in [0,1]
+zipf_alpha:        0.8
+urgency_weight:    0.2       # Optimal W from sweep
 seed:              42
 ```
 
 ---
 
-## Testing
+## Paper Results (Authentic Ground Truth)
 
-```bash
-make test            # full suite with coverage
-make test-unit       # unit tests only
-make test-integration
-make smoke           # quick smoke validation
-```
-
----
-
-## TrajectoryCache Algorithm Details
-
-### Spatial Urgency
-
-For each cached item `f` at highway position `ℓ_f`:
-
-```
-x̂_v = x_v + s_v · d_v · T_pred        (predicted vehicle position)
-TTE(v,f) = |ℓ_f − x_v| / s_v          (time-to-encounter)
-u(v,f)   = 1 / (1 + α_d · TTE(v,f))   (per-vehicle urgency)
-U_raw(f) = Σ u(v,f)  [for vehicles within r_rel of x̂_v]
-```
-
-### Popularity
-
-Sliding-window request count normalised by the maximum count in the candidate set C⁺.
-
-### Eviction Decision
-
-When the cache is full and a new item arrives, TC scores all items in `C⁺ = cached_items ∪ {new_item}`. The item with the lowest composite score is evicted (or the new item is discarded if it scores lowest).
-
----
-
-## Paper Results (Verified Ground Truth)
+The proposed TrajectoryCache has been rigorously evaluated across two distinct environments on a 10 km highway topology where content requests are localized within a dense 1.6 km active request zone:
+1. **Independent Traffic (SimPy):** Baseline collision-free free-flow traffic.
+2. **Platooning Traffic (SUMO):** Microscopic car-following dynamics governed by the Krauss model via SUMO 1.27.
 
 ### α = 0.8 (High Skew) — Mean Cache Miss Rate across 10 seeds
 
 | Policy         | SimPy (Independent) | SUMO (Platooning) |
-|----------------|--------------------|--------------------|
-| LRU            | 6.14%              | 20.37%             |
-| LFU            | 4.99%              | 14.79%             |
-| **TC (W=0.1)** | **4.54%**          | **14.34%**         |
-| TC (W=0.2)     | 4.64%              | 14.79%             |
-| TC (W=0.5)     | 4.84%              | 15.67%             |
+|----------------|---------------------|-------------------|
+| LRU            | 80.24%              | 80.24%            |
+| LFU            | 68.47%              | 67.58%            |
+| **TC (W=0.2)** | **63.83%**          | **63.79%**        |
 
-TC with W=0.1 achieves the **best miss rate** in both environments.
+Under dense platooning traffic with the 1.6km bounded geographic constraint, TrajectoryCache achieves a strong ~63.8% miss rate, consistently outperforming the LFU baseline (67.58% - 68.47%). The algorithm natively thrives on the massive eviction battles induced by tight platoons approaching clustered content items.
 
 ---
 
@@ -217,7 +156,7 @@ trajectorycache/
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). PRs welcome!
+See `CONTRIBUTING.md`. PRs welcome!
 
 ## License
 

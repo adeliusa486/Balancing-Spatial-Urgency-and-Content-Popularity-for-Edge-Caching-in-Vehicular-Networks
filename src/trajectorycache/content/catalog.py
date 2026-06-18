@@ -46,11 +46,13 @@ class ContentCatalog:
         self,
         n_items: int = 200,
         road_length: float = 10_000.0,
+        active_zone_length: float = 1600.0,
         zipf_alpha: float = 1.2,
         seed: Optional[int] = None,
     ) -> None:
         self.n_items = n_items
         self.road_length = road_length
+        self.active_zone_length = active_zone_length
         self.zipf_alpha = zipf_alpha
         self._rng = np.random.default_rng(seed)
 
@@ -60,7 +62,9 @@ class ContentCatalog:
     # ------------------------------------------------------------------
 
     def _build_catalog(self) -> Dict[int, ContentItem]:
-        locations = self._rng.uniform(0, self.road_length, size=self.n_items)
+        start_loc = (self.road_length - self.active_zone_length) / 2.0
+        end_loc = start_loc + self.active_zone_length
+        locations = self._rng.uniform(start_loc, end_loc, size=self.n_items)
         return {
             i: ContentItem(item_id=i, location=float(locations[i]))
             for i in range(self.n_items)
