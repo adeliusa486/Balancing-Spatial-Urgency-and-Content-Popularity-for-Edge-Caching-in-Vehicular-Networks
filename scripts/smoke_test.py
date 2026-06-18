@@ -27,13 +27,13 @@ def record(name: str, fn):
         result = fn()
         elapsed = time.perf_counter() - start
         RESULTS.append({"test": name, "status": "PASS", "elapsed_s": round(elapsed, 3), "detail": ""})
-        print(f"  ✓  {name}  ({elapsed*1000:.1f} ms)")
+        print(f"  [PASS] {name}  ({elapsed*1000:.1f} ms)")
         return True, result
     except Exception as exc:
         elapsed = time.perf_counter() - start
         tb = traceback.format_exc()
         RESULTS.append({"test": name, "status": "FAIL", "elapsed_s": round(elapsed, 3), "detail": tb})
-        print(f"  ✗  {name}\n     {exc}")
+        print(f"  [FAIL] {name}\n     {exc}")
         return False, None
 
 
@@ -76,6 +76,7 @@ def smoke_simulation_run():
 
 
 def smoke_benchmark():
+    # Note: This is a functional test only, not a paper result replication.
     from trajectorycache import run_benchmark
     from trajectorycache.simulation.runner import SimulationConfig
     cfg = SimulationConfig(n_steps=30, warmup_steps=5, n_vehicles=5, n_items=20,

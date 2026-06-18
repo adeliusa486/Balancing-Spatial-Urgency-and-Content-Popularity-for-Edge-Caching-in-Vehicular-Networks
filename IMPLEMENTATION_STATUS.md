@@ -66,7 +66,7 @@
 |-----------|--------|-------|
 | Plotting utilities | Implemented but optional | Requires `matplotlib`; degrades gracefully |
 | Jupyter notebooks | Directory created | Template only — no pre-run analysis cells |
-| SUMO integration | Not implemented | Adaptor hook documented in Architecture |
+| SUMO integration | Partially implemented | `sumo_cache_sim.py` runs paper's SUMO Krauss platooning, but not fully integrated into `src/` |
 | MLflow tracking | Not implemented | Hook location identified in benchmark runner |
 
 ---

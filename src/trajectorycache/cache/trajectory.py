@@ -10,6 +10,8 @@ popularity is a sliding-window request count normalized across cache items.
 from __future__ import annotations
 
 import logging
+import time
+import threading
 from collections import defaultdict, deque
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -67,6 +69,7 @@ class TrajectoryCache(BaseCache):
 
         # Popularity: {item_id -> deque of request timestamps}
         self._req_times: Dict[int, deque] = defaultdict(deque)
+        self._lock = threading.Lock()
 
     # ------------------------------------------------------------------
     # Public API
@@ -106,10 +109,11 @@ class TrajectoryCache(BaseCache):
         vehicles = vehicles or []
         catalog = catalog or {}
 
-        self._prune_request_window(current_time)
+        with self._lock:
+            self._prune_request_window(current_time)
 
-        # Record request for popularity
-        self._req_times[item_id].append(current_time)
+            # Record request for popularity
+            self._req_times[item_id].append(current_time)
 
         if item_id in self._cache:
             # ---- HIT ----
@@ -125,7 +129,7 @@ class TrajectoryCache(BaseCache):
         """Force-evict the lowest-scoring cached item (used by tests)."""
         if not self._cache:
             return None
-        scores = self._score_all_cached({})
+        scores = self._score_all_cached({}, current_time=time.time())
         victim = min(scores, key=scores.get)
         del self._cache[victim]
         logger.debug("Force-evicted item %d", victim)
@@ -198,7 +202,8 @@ class TrajectoryCache(BaseCache):
         urgency_norm = self._min_max_normalize(raw_urgency)
 
         # --- Historical popularity ---
-        pop_counts = {fid: len(self._req_times[fid]) for fid in catalog}
+        with self._lock:
+            pop_counts = {fid: len(self._req_times[fid]) for fid in catalog}
         pop_norm = self._popularity_normalize(pop_counts)
 
         # --- Composite score ---
@@ -207,10 +212,10 @@ class TrajectoryCache(BaseCache):
             scores[fid] = self.W * urgency_norm[fid] + (1.0 - self.W) * pop_norm[fid]
         return scores
 
-    def _score_all_cached(self, vehicles: dict) -> Dict[int, float]:
+    def _score_all_cached(self, vehicles: dict, current_time: float = 0.0) -> Dict[int, float]:
         """Score only items currently in the cache (no new item in C⁺)."""
         catalog = {fid: item.location for fid, item in self._cache.items()}
-        return self._score_all(catalog, vehicles, 0.0)
+        return self._score_all(catalog, vehicles, current_time)
 
     def _raw_urgency(self, item_loc: float, vehicles: List[dict]) -> float:
         """
@@ -286,4 +291,5 @@ class TrajectoryCache(BaseCache):
 
     def popularity_counts(self) -> Dict[int, int]:
         """Return sliding-window request counts for all tracked items."""
-        return {k: len(v) for k, v in self._req_times.items() if v}
+        with self._lock:
+            return {k: len(v) for k, v in self._req_times.items() if v}

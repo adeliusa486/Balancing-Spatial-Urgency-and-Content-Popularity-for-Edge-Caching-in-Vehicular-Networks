@@ -180,19 +180,19 @@ When the cache is full and a new item arrives, TC scores all items in `C⁺ = ca
 
 ---
 
-## Benchmarks
+## Paper Results (Verified Ground Truth)
 
-Example results (`n_steps=1000, capacity=20, n_vehicles=50, zipf_alpha=1.2`):
+### α = 0.8 (High Skew) — Mean Cache Miss Rate across 10 seeds
 
-| Policy | Hit Rate |
-|--------|----------|
-| TrajectoryCache (W=0.5) | **~55–65%** |
-| LFU | ~55–63% |
-| LRU | ~50–57% |
-| FIFO | ~46–52% |
-| Random | ~44–50% |
+| Policy         | SimPy (Independent) | SUMO (Platooning) |
+|----------------|--------------------|--------------------|
+| LRU            | 6.14%              | 20.37%             |
+| LFU            | 4.99%              | 14.79%             |
+| **TC (W=0.1)** | **4.54%**          | **14.34%**         |
+| TC (W=0.2)     | 4.64%              | 14.79%             |
+| TC (W=0.5)     | 4.84%              | 15.67%             |
 
-*Results vary with traffic density, content distribution, and hyperparameters.*
+TC with W=0.1 achieves the **best miss rate** in both environments.
 
 ---
 
