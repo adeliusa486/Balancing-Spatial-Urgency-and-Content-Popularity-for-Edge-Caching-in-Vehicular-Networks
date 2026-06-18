@@ -21,14 +21,14 @@ class SimulationConfig:
 
     # Highway
     road_length: float = 10_000.0
-    n_vehicles: int = 50
+    n_vehicles: int = 600
     dt: float = 1.0
     mean_speed: float = 25.0
     speed_std: float = 5.0
 
     # Content
     n_items: int = 200
-    zipf_alpha: float = 1.2
+    zipf_alpha: float = 0.8
     requests_per_step: int = 5
 
     # Simulation

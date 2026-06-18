@@ -30,7 +30,7 @@ from trajectorycache.utils.plotting import plot_bar_comparison, plot_hit_rates
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="TrajectoryCache policy benchmark")
-    p.add_argument("--config", type=Path, default=None, help="YAML config file")
+    p.add_argument("--config", type=Path, default=Path("configs/simulation.yaml"), help="YAML config file")
     p.add_argument("--output", type=Path, default=Path("experiments/results"), help="Output dir")
     p.add_argument("--n-steps", type=int, default=None)
     p.add_argument("--capacity", type=int, default=None)
