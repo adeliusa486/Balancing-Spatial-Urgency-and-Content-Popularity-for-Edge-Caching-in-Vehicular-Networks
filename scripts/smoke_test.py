@@ -66,7 +66,7 @@ def smoke_config_load():
 def smoke_simulation_run():
     from trajectorycache import TrajectoryCache, SimulationRunner, SimulationConfig
     cfg = SimulationConfig(n_steps=50, warmup_steps=10, n_vehicles=10, n_items=30,
-                           cache_capacity=8, requests_per_step=3, seed=0)
+                           cache_capacity=8, seed=0)
     cache = TrajectoryCache(capacity=8, urgency_weight=0.4)
     runner = SimulationRunner(cache=cache, config=cfg)
     result = runner.run()

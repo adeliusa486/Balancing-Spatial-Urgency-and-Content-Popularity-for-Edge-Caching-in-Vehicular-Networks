@@ -71,7 +71,6 @@ result = runner.run(verbose=False) -> SimulationResult
 | `cache_capacity` | 20 | Cache size |
 | `n_items` | 200 | Catalog size |
 | `zipf_alpha` | 1.2 | Popularity skew |
-| `requests_per_step` | 5 | Requests per step |
 | `seed` | 42 | RNG seed |
 
 ---
