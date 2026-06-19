@@ -54,12 +54,25 @@ src/trajectorycache/
 
 ## Quick Start
 
-### Installation
+### Environment Setup
 
 ```bash
-git clone https://github.com/your-org/trajectorycache.git
-cd trajectorycache
-pip install -e ".[dev]"
+# Create isolated environment
+python -m venv .venv
+# source .venv/Scripts/activate   # Windows Git Bash
+# source .venv/bin/activate     # Linux/macOS
+
+# Install runtime + dev dependencies
+pip install -r requirements-dev.txt
+
+# Install package in editable mode
+pip install -e .
+```
+
+For exact reproducibility of paper results, use `requirements-lock.txt`:
+```bash
+pip install -r requirements-lock.txt
+pip install -e .
 ```
 
 ### Python API
@@ -87,15 +100,11 @@ print(f"Hit rate: {result.hit_rate:.2%}")
 ### Benchmark all policies
 
 ```bash
-make benchmark
-# or
+# Canonical multi-seed paper results
+python scripts/run_multiseed.py
+
+# Single-seed benchmark
 python scripts/run_benchmark.py
-```
-
-### Hyperparameter sweep
-
-```bash
-python scripts/sweep.py --config configs/sweep.yaml
 ```
 
 ---
@@ -137,60 +146,68 @@ TC outperforms all baselines under platooning conditions. The advantage over LFU
 
 ---
 
-## Project Structure
+## Repository Layout
 
-```
+| Path | Contents |
+|---|---|
+| `src/trajectorycache/` | Canonical package (all paper experiments use this) |
+| `scripts/` | Experiment runners; each is independently executable |
+| `experiments/results/` | JSON result artifacts (committed) |
+| `experiments/figures/` | Generated figures (regenerated, not committed) |
+| `configs/` | YAML experiment configurations |
+| `paper/` | LaTeX source, bibliography, compiled `.bbl` |
+| `legacy/` | Deprecated scripts retained for audit trail only |
+| `tests/` | Unit + integration tests |
 
 ---
 
-## Reproducing SUMO Results
+## Reproducing All Paper Results
 
-The paper reports results under two simulation environments. The **kinematic pipeline** (`src/` + `scripts/`) is fully self-contained and reproducible from this repository. The **SUMO pipeline** requires external trace files.
-
-### Kinematic pipeline (fully reproducible)
+All results can be regenerated with a single command:
 
 ```bash
-# Single-seed benchmark
-python scripts/run_benchmark.py
-
-# Multi-seed paper results (10 seeds, alpha=0.8 and alpha=0.5)
-python scripts/run_multiseed.py
-
-# W-parameter ablation sweep
-python scripts/run_wsweep.py
-
-# Vehicle density sweep
-python scripts/run_density_sweep.py
+make pipeline
 ```
 
-### SUMO pipeline (requires trace files)
+Or step by step:
 
-The SUMO Floating Car Data (FCD) traces used in the original paper (`fcd_{seed}.xml`,
-one per seed) were generated with **SUMO 1.27** using the Krauss car-following model
-on a straight 10 km highway network. These files are not included in the repository
-due to size constraints.
+```bash
+# Step 1 — Generate multi-seed results for both alpha values
+python scripts/run_multiseed.py --alpha 0.8 --output experiments/results/alpha08
+python scripts/run_multiseed.py --alpha 0.5 --output experiments/results/alpha05
 
-To regenerate the traces:
+# Step 2 — Verify statistical claims
+python scripts/compute_stats.py --input experiments/results/alpha08/multiseed_alpha0.8.json
 
-1. Install SUMO 1.27: <https://sumo.dlr.de/>
-2. Generate network and route files:
-   ```bash
-   netgenerate --straight --output-file=highway.net.xml --length=10000
-   # Edit highway.rou.xml to set Krauss car-following model and 600 vehicles
-   ```
-3. Run SUMO for each seed to produce FCD output:
-   ```bash
-   sumo -c highway_seed{N}.sumocfg --fcd-output fcd_{N}.xml
-   ```
-4. Evaluate with the legacy script (note: contains outdated TC parameters — see deprecation warning):
-   ```bash
-   python sumo_cache_sim.py   # requires fcd_{seed}.xml files in working directory
-   ```
+# Step 3 — Regenerate figures from JSON
+python scripts/generate_figures.py \
+    --input experiments/results/alpha08/multiseed_alpha0.8.json \
+    --output experiments/figures/
+```
 
-> **Note:** `simpy_simulation.py` and `sumo_cache_sim.py` at the project root are
-> **deprecated legacy scripts** with incorrect TC parameters (`GRZ_RADIUS=150`,
-> `T_PREDICT=3.0`) that differ from the canonical `src/` implementation. They are
-> retained for historical reference. All new experiments should use `scripts/`.
+## Figure Reproducibility
+
+All paper figures are generated from the committed result JSON. To regenerate:
+
+```bash
+python scripts/generate_figures.py \
+    --input experiments/results/alpha08/multiseed_alpha0.8.json \
+    --output experiments/figures/
+```
+
+Figures are written to `experiments/figures/` as PDF and included in the paper
+via `\includegraphics`. They are not committed to the repository (see `.gitignore`).
+
+## Determinism
+
+To ensure exact reproducibility, all random elements (highway vehicle generation, Zipf content requests, and baseline policies like Random cache) are fully deterministic when a seed is provided. The `SimulationRunner` centralizes seed initialization by explicitly seeding Python's built-in `random` and NumPy's `np.random` environments at the start of each run. Determinism is verified in CI via `tests/test_determinism.py`.
+
+## Paper Version History
+
+| Date | Change |
+|---|---|
+| 2026-06-19 | Corrected seed win count from 9/10 to 8/10 in Fig. 3 caption and §5.3; seeds 3 and 10 identified as LFU wins |
+| 2026-06-19 | Removed duplicate sentence in §5.2 opening |
 
 ---
 

@@ -84,6 +84,12 @@ class SimulationRunner:
         self.cache = cache
         self.cfg = config or SimulationConfig()
 
+        if self.cfg.seed is not None:
+            import random
+            import numpy as np
+            random.seed(self.cfg.seed)
+            np.random.seed(self.cfg.seed)
+
         self.highway = HighwaySimulation(
             road_length=self.cfg.road_length,
             n_vehicles=self.cfg.n_vehicles,
