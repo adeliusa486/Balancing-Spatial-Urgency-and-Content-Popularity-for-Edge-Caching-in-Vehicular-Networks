@@ -131,5 +131,28 @@ def main() -> None:
         }, f, indent=2)
     print(f"Saved to {fname}")
 
+    # AFTER writing results to disk — validate schema immediately
+    REQUIRED_KEYS = {"sumo", "simpy"}
+    REQUIRED_CONDITION_KEYS = {"TrajectoryCache", "LFU", "LRU", "FIFO", "Random"}
+    REQUIRED_POLICY_KEYS = {"miss_rate_mean", "miss_rate_std", "per_seed"}
+    N_SEEDS = len(args.seeds)
+
+    with open(fname) as f:
+        written = json.load(f)
+
+    for cond in REQUIRED_KEYS:
+        assert cond in written, f"JSON missing top-level key: '{cond}'"
+        for policy in REQUIRED_CONDITION_KEYS:
+            assert policy in written[cond], f"JSON missing policy '{policy}' under '{cond}'"
+            for k in REQUIRED_POLICY_KEYS:
+                assert k in written[cond][policy], \
+                    f"JSON missing '{k}' for {cond}/{policy}"
+            assert isinstance(written[cond][policy]["per_seed"], list), \
+                f"per_seed must be a list for {cond}/{policy}"
+            assert len(written[cond][policy]["per_seed"]) == N_SEEDS, \
+                f"per_seed length mismatch for {cond}/{policy}: expected {N_SEEDS}"
+
+    print("[run_multiseed] JSON schema validated OK.")
+
 if __name__ == "__main__":
     main()

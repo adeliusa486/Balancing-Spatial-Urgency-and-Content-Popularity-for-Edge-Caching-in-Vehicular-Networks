@@ -14,12 +14,28 @@ from pathlib import Path
 from scipy import stats
 import numpy as np
 
-# ---- Load per-seed data ----
-alpha08_path = Path("experiments/results/alpha08/multiseed_alpha0.8.json")
-wsweep_path  = Path("experiments/results/wsweep/wsweep_results.json")
+import argparse
 
-alpha08 = json.loads(alpha08_path.read_text())
-wsweep  = json.loads(wsweep_path.read_text())
+# ---- Parse arguments ----
+parser = argparse.ArgumentParser()
+parser.add_argument("--input", default="experiments/results/alpha08/multiseed_alpha0.8.json")
+parser.add_argument("--wsweep-input", default="experiments/results/wsweep/wsweep_results.json")
+args = parser.parse_args()
+
+alpha08_path = Path(args.input)
+wsweep_path  = Path(args.wsweep_input)
+
+try:
+    alpha08 = json.loads(alpha08_path.read_text())
+except FileNotFoundError:
+    print(f"Error: Could not find {alpha08_path}. Did you run scripts/run_multiseed.py?")
+    sys.exit(1)
+
+try:
+    wsweep  = json.loads(wsweep_path.read_text())
+except FileNotFoundError:
+    print(f"Warning: Could not find {wsweep_path}. Ablation stats will be skipped.")
+    wsweep = None
 
 # Validate JSON structure
 assert "sumo" in alpha08, f"Expected 'sumo' key in {alpha08_path}; got keys: {list(alpha08.keys())}"
@@ -64,9 +80,10 @@ else:
     print("  => NOT significant: TC does NOT beat LFU under independent traffic (expected)")
 
 # ---- Ablation table from wsweep ----
-print(f"\n=== Ablation: W sweep (LFU mean={wsweep['lfu_mean']:.2f}%) ===")
-print(f"{'W':>6}  {'TC mean%':>10}  {'TC std%':>8}  {'vs LFU':>8}")
-print("-" * 42)
-for w_str, vals in wsweep["w_sweep"].items():
-    margin = vals["mean"] - wsweep["lfu_mean"]
-    print(f"  {float(w_str):.1f}    {vals['mean']:>8.2f}%    {vals['std']:>6.2f}%   {margin:>+7.2f}%")
+if wsweep is not None:
+    print(f"\n=== Ablation: W sweep (LFU mean={wsweep['lfu_mean']:.2f}%) ===")
+    print(f"{'W':>6}  {'TC mean%':>10}  {'TC std%':>8}  {'vs LFU':>8}")
+    print("-" * 42)
+    for w_str, vals in wsweep["w_sweep"].items():
+        margin = vals["mean"] - wsweep["lfu_mean"]
+        print(f"  {float(w_str):.1f}    {vals['mean']:>8.2f}%    {vals['std']:>6.2f}%   {margin:>+7.2f}%")

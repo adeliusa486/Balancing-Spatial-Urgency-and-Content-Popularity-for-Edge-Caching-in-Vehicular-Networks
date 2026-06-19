@@ -44,13 +44,36 @@ test-integration:  ## Run integration tests only
 smoke:  ## Run quick smoke test
 	$(PYTHON) scripts/smoke_test.py
 
-# ── Experiments ───────────────────────────────────────────────────────────────
+# ── Experiments & Reproducibility ─────────────────────────────────────────────
 
 benchmark:  ## Run full policy benchmark
 	$(PYTHON) scripts/run_benchmark.py --output $(RESULTS)
 
 sweep:  ## Run hyperparameter sweep
 	$(PYTHON) scripts/sweep.py --config configs/sweep.yaml --output $(RESULTS)/sweep
+
+pipeline: results-alpha08 results-alpha05 stats figures  ## Reproduce all paper results
+	@echo "Full pipeline complete."
+
+results-alpha08:
+	$(PYTHON) scripts/run_multiseed.py --zipf-alpha 0.8 --output $(RESULTS)/alpha08
+
+results-alpha05:
+	$(PYTHON) scripts/run_multiseed.py --zipf-alpha 0.5 --output $(RESULTS)/alpha05
+
+stats:
+	$(PYTHON) scripts/compute_stats.py --input $(RESULTS)/alpha08/multiseed_alpha0.8.json
+
+figures:
+	$(PYTHON) scripts/generate_figures.py \
+		--input $(RESULTS)/alpha08/multiseed_alpha0.8.json \
+		--output experiments/figures/
+
+paper: figures  ## Compile the LaTeX paper
+	cd paper && pdflatex tc_paper_elsevier.tex \
+		&& bibtex tc_paper_elsevier \
+		&& pdflatex tc_paper_elsevier.tex \
+		&& pdflatex tc_paper_elsevier.tex
 
 # ── API ───────────────────────────────────────────────────────────────────────
 
