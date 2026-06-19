@@ -56,3 +56,17 @@ data/processed/*
 !data/processed/.gitkeep
 logs/
 *.log
+
+# LaTeX build artifacts
+*.aux
+*.blg
+*.spl
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Generated figures
+experiments/figures/*.pdf
+experiments/figures/*.png
