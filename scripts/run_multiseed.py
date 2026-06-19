@@ -44,66 +44,79 @@ def main() -> None:
     args = parse_args()
     setup_logging(level="WARNING")
 
-    cfg = load_config(args.config)
+    cfg_sumo = load_config(args.config)
     if args.zipf_alpha is not None:
-        cfg.zipf_alpha = args.zipf_alpha
+        cfg_sumo.zipf_alpha = args.zipf_alpha
+    cfg_sumo.platoon_size = 10
 
-    print(f"\n{'='*70}")
-    print(f"Multi-seed benchmark | alpha={cfg.zipf_alpha} | seeds={args.seeds}")
-    print(f"{'='*70}\n")
+    cfg_simpy = load_config(args.config)
+    if args.zipf_alpha is not None:
+        cfg_simpy.zipf_alpha = args.zipf_alpha
+    cfg_simpy.platoon_size = 1
 
-    # Accumulate per-seed miss rates for each policy
-    # We use the class names as they come out of the metrics
+    print(f"\n{'='*90}")
+    print(f"Multi-seed benchmark | alpha={cfg_sumo.zipf_alpha} | seeds={args.seeds}")
+    print(f"{'='*90}\n")
+
     class_names = {"trajectory": "TrajectoryCache", "lfu": "LFU", "lru": "LRU", "random": "Random", "fifo": "FIFO"}
-    all_miss: dict[str, list[float]] = {class_names[name]: [] for name, _ in DEFAULT_POLICIES}
+    all_miss_sumo: dict[str, list[float]] = {class_names[name]: [] for name, _ in DEFAULT_POLICIES}
+    all_miss_simpy: dict[str, list[float]] = {class_names[name]: [] for name, _ in DEFAULT_POLICIES}
 
     for i, seed in enumerate(args.seeds):
-        cfg.seed = seed
-        print(f"Seed {i+1}/{len(args.seeds)}: {seed}", end="  ", flush=True)
-        results = run_benchmark(config=cfg, verbose=args.verbose, output_dir=None)
-        for name, metrics in results.items():
-            if name in all_miss:
-                all_miss[name].append(metrics.miss_rate * 100.0)
-        # Print quick summary for this seed
-        tc_miss = results["TrajectoryCache"].miss_rate * 100.0 if "TrajectoryCache" in results else 0.0
-        lfu_miss = results["LFU"].miss_rate * 100.0 if "LFU" in results else 0.0
-        print(f"TC={tc_miss:.2f}%  LFU={lfu_miss:.2f}%")
+        cfg_sumo.seed = seed
+        cfg_simpy.seed = seed
+        print(f"Seed {i+1}/{len(args.seeds)}: {seed}")
+        
+        # SUMO
+        print("  Running SUMO (platoons)... ", end="", flush=True)
+        res_sumo = run_benchmark(config=cfg_sumo, verbose=args.verbose, output_dir=None)
+        for name, metrics in res_sumo.items():
+            if name in all_miss_sumo:
+                all_miss_sumo[name].append(metrics.miss_rate * 100.0)
+        tc_sumo = res_sumo["TrajectoryCache"].miss_rate * 100.0 if "TrajectoryCache" in res_sumo else 0.0
+        print(f"TC={tc_sumo:.2f}%")
 
-    # Final table
-    print(f"\n{'='*70}")
-    print(f"RESULTS: alpha={cfg.zipf_alpha}  (mean ± std over {len(args.seeds)} seeds)")
-    print(f"{'='*70}")
-    print(f"{'Policy':<18} {'Mean Miss%':>11} {'Std Miss%':>10} {'Min':>8} {'Max':>8}")
-    print("-" * 60)
+        # SimPy
+        print("  Running SimPy (indep)...   ", end="", flush=True)
+        res_simpy = run_benchmark(config=cfg_simpy, verbose=args.verbose, output_dir=None)
+        for name, metrics in res_simpy.items():
+            if name in all_miss_simpy:
+                all_miss_simpy[name].append(metrics.miss_rate * 100.0)
+        tc_simpy = res_simpy["TrajectoryCache"].miss_rate * 100.0 if "TrajectoryCache" in res_simpy else 0.0
+        print(f"TC={tc_simpy:.2f}%")
 
-    summary = {}
+    print(f"\n{'='*90}")
+    print(f"RESULTS: alpha={cfg_sumo.zipf_alpha}  (mean miss rate % over {len(args.seeds)} seeds)")
+    print(f"{'='*90}")
+    print(f"{'Policy':<18} | {'SimPy (Independent)':<20} | {'SUMO (Platoons)':<20}")
+    print("-" * 65)
+
+    summary_sumo = {}
+    summary_simpy = {}
     for short_name, _ in DEFAULT_POLICIES:
         name = class_names[short_name]
-        vals = np.array(all_miss[name])
-        mean_v = float(np.mean(vals))
-        std_v  = float(np.std(vals))
-        min_v  = float(np.min(vals))
-        max_v  = float(np.max(vals))
-        display = "TrajectoryCache" if name == "trajectory" else name.upper()
-        print(f"{display:<18} {mean_v:>10.2f}%  {std_v:>8.2f}%  {min_v:>7.2f}%  {max_v:>7.2f}%")
-        summary[name] = {
-            "miss_rate_mean": round(mean_v, 4),
-            "miss_rate_std":  round(std_v, 4),
-            "miss_rate_min":  round(min_v, 4),
-            "miss_rate_max":  round(max_v, 4),
-            "per_seed":       [round(v, 4) for v in all_miss[name]],
-            "seeds":          list(args.seeds),
-        }
-    print(f"{'='*70}\n")
+        
+        sim_v = np.array(all_miss_simpy[name])
+        sumo_v = np.array(all_miss_sumo[name])
+        
+        sim_mean, sim_std = float(np.mean(sim_v)), float(np.std(sim_v))
+        sumo_mean, sumo_std = float(np.mean(sumo_v)), float(np.std(sumo_v))
+        
+        display = "TrajectoryCache" if name == "TrajectoryCache" else name.upper()
+        print(f"{display:<18} | {sim_mean:>6.2f} ± {sim_std:<5.2f}       | {sumo_mean:>6.2f} ± {sumo_std:<5.2f}")
+        
+        summary_sumo[name] = {"miss_rate_mean": round(sumo_mean, 4)}
+        summary_simpy[name] = {"miss_rate_mean": round(sim_mean, 4)}
+
+    print(f"{'='*90}\n")
 
     # Save
     out = args.output
     out.mkdir(parents=True, exist_ok=True)
-    fname = out / f"multiseed_alpha{cfg.zipf_alpha:.1f}.json"
+    fname = out / f"multiseed_alpha{cfg_sumo.zipf_alpha:.1f}.json"
     with open(fname, "w") as f:
-        json.dump({"zipf_alpha": cfg.zipf_alpha, "seeds": list(args.seeds), "results": summary}, f, indent=2)
+        json.dump({"zipf_alpha": cfg_sumo.zipf_alpha, "seeds": list(args.seeds), "sumo": summary_sumo, "simpy": summary_simpy}, f, indent=2)
     print(f"Saved to {fname}")
-
 
 if __name__ == "__main__":
     main()
