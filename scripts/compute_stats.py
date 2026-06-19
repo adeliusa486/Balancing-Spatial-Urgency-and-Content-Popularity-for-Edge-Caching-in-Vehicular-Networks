@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 """
 scripts/compute_stats.py
-Compute Wilcoxon signed-rank test between TC and LFU per-seed miss rates,
-and print ablation table (W=0 proxy, W=0.2, W=1.0) from wsweep data.
+Compute Wilcoxon signed-rank test between TC and LFU per-seed miss rates
+from SUMO (platooning) condition, and print ablation table from wsweep data.
+
+Loads from the canonical JSON structure produced by run_multiseed.py:
+  {sumo: {PolicyName: {miss_rate_mean, miss_rate_std, per_seed: [...]}, ...},
+   simpy: {...}, seeds: [...]}
 """
 import json
 import sys
@@ -11,23 +15,53 @@ from scipy import stats
 import numpy as np
 
 # ---- Load per-seed data ----
-alpha08 = json.loads(Path("experiments/results/alpha08/multiseed_alpha0.8.json").read_text())
-wsweep  = json.loads(Path("experiments/results/wsweep/wsweep_results.json").read_text())
+alpha08_path = Path("experiments/results/alpha08/multiseed_alpha0.8.json")
+wsweep_path  = Path("experiments/results/wsweep/wsweep_results.json")
 
-tc_seeds  = alpha08["results"]["TrajectoryCache"]["per_seed"]
-lfu_seeds = alpha08["results"]["LFU"]["per_seed"]
+alpha08 = json.loads(alpha08_path.read_text())
+wsweep  = json.loads(wsweep_path.read_text())
 
-# ---- Wilcoxon signed-rank test ----
-stat, p = stats.wilcoxon(tc_seeds, lfu_seeds, alternative="less")
-print(f"\n=== Wilcoxon signed-rank test: TC < LFU (alpha=0.8) ===")
-print(f"  n = {len(tc_seeds)}")
-print(f"  TC  mean={np.mean(tc_seeds):.4f}%  std={np.std(tc_seeds):.4f}%")
-print(f"  LFU mean={np.mean(lfu_seeds):.4f}%  std={np.std(lfu_seeds):.4f}%")
+# Validate JSON structure
+assert "sumo" in alpha08, f"Expected 'sumo' key in {alpha08_path}; got keys: {list(alpha08.keys())}"
+assert "simpy" in alpha08, f"Expected 'simpy' key in {alpha08_path}"
+assert "per_seed" in alpha08["sumo"]["TrajectoryCache"], \
+    "Missing per_seed array in sumo.TrajectoryCache — re-run scripts/run_multiseed.py to regenerate"
+
+# Use SUMO (platooning) per-seed data for the significance test
+# This is the primary evaluation condition reported in Table 1
+tc_seeds_sumo  = alpha08["sumo"]["TrajectoryCache"]["per_seed"]
+lfu_seeds_sumo = alpha08["sumo"]["LFU"]["per_seed"]
+
+assert len(tc_seeds_sumo) == len(lfu_seeds_sumo) == 10, \
+    f"Expected 10 seeds, got TC={len(tc_seeds_sumo)}, LFU={len(lfu_seeds_sumo)}"
+
+# ---- Wilcoxon signed-rank test (SUMO condition) ----
+stat, p = stats.wilcoxon(tc_seeds_sumo, lfu_seeds_sumo, alternative="less")
+print(f"\n=== Wilcoxon signed-rank test: TC < LFU — SUMO (platooning), alpha=0.8 ===")
+print(f"  n = {len(tc_seeds_sumo)}")
+print(f"  TC  per-seed: {[round(v,2) for v in tc_seeds_sumo]}")
+print(f"  LFU per-seed: {[round(v,2) for v in lfu_seeds_sumo]}")
+print(f"  TC  mean={np.mean(tc_seeds_sumo):.4f}%  std={np.std(tc_seeds_sumo):.4f}%")
+print(f"  LFU mean={np.mean(lfu_seeds_sumo):.4f}%  std={np.std(lfu_seeds_sumo):.4f}%")
+print(f"  TC wins (lower miss rate) in {sum(t < l for t, l in zip(tc_seeds_sumo, lfu_seeds_sumo))}/10 seeds")
 print(f"  statistic = {stat:.3f}, p-value = {p:.4f}")
 if p < 0.05:
-    print("  => SIGNIFICANT (p < 0.05): TC has significantly lower miss rate than LFU")
+    print("  => SIGNIFICANT (p < 0.05): TC has significantly lower miss rate than LFU under platooning")
 else:
     print("  => Not significant at p=0.05")
+
+# ---- SimPy condition (independent traffic) ----
+tc_seeds_simpy  = alpha08["simpy"]["TrajectoryCache"]["per_seed"]
+lfu_seeds_simpy = alpha08["simpy"]["LFU"]["per_seed"]
+stat2, p2 = stats.wilcoxon(tc_seeds_simpy, lfu_seeds_simpy, alternative="less")
+print(f"\n=== Wilcoxon signed-rank test: TC < LFU — SimPy (independent), alpha=0.8 ===")
+print(f"  TC  mean={np.mean(tc_seeds_simpy):.4f}%  std={np.std(tc_seeds_simpy):.4f}%")
+print(f"  LFU mean={np.mean(lfu_seeds_simpy):.4f}%  std={np.std(lfu_seeds_simpy):.4f}%")
+print(f"  statistic = {stat2:.3f}, p-value = {p2:.4f}")
+if p2 < 0.05:
+    print("  => SIGNIFICANT: TC also beats LFU under independent traffic")
+else:
+    print("  => NOT significant: TC does NOT beat LFU under independent traffic (expected)")
 
 # ---- Ablation table from wsweep ----
 print(f"\n=== Ablation: W sweep (LFU mean={wsweep['lfu_mean']:.2f}%) ===")

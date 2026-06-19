@@ -105,8 +105,16 @@ def main() -> None:
         display = "TrajectoryCache" if name == "TrajectoryCache" else name.upper()
         print(f"{display:<18} | {sim_mean:>6.2f} ± {sim_std:<5.2f}       | {sumo_mean:>6.2f} ± {sumo_std:<5.2f}")
         
-        summary_sumo[name] = {"miss_rate_mean": round(sumo_mean, 4)}
-        summary_simpy[name] = {"miss_rate_mean": round(sim_mean, 4)}
+        summary_sumo[name] = {
+            "miss_rate_mean": round(sumo_mean, 4),
+            "miss_rate_std": round(sumo_std, 4),
+            "per_seed": [round(float(v), 4) for v in sumo_v],
+        }
+        summary_simpy[name] = {
+            "miss_rate_mean": round(sim_mean, 4),
+            "miss_rate_std": round(sim_std, 4),
+            "per_seed": [round(float(v), 4) for v in sim_v],
+        }
 
     print(f"{'='*90}\n")
 
@@ -115,7 +123,12 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     fname = out / f"multiseed_alpha{cfg_sumo.zipf_alpha:.1f}.json"
     with open(fname, "w") as f:
-        json.dump({"zipf_alpha": cfg_sumo.zipf_alpha, "seeds": list(args.seeds), "sumo": summary_sumo, "simpy": summary_simpy}, f, indent=2)
+        json.dump({
+            "zipf_alpha": cfg_sumo.zipf_alpha,
+            "seeds": list(args.seeds),
+            "sumo": summary_sumo,
+            "simpy": summary_simpy,
+        }, f, indent=2)
     print(f"Saved to {fname}")
 
 if __name__ == "__main__":

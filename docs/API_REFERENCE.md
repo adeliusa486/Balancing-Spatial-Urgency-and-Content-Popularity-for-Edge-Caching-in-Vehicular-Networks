@@ -5,8 +5,8 @@
 ### `TrajectoryCache`
 
 ```python
-class TrajectoryCache(capacity, urgency_weight=0.5, pop_window=300.0,
-                      t_pred=3.0, alpha_d=0.5, r_rel=500.0)
+class TrajectoryCache(capacity, urgency_weight=0.2, pop_window=300.0,
+                      t_pred=30.0, alpha_d=0.1, r_rel=800.0)
 ```
 
 **Parameters**
