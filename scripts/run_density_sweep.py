@@ -20,14 +20,14 @@ from trajectorycache.utils.config import load_config
 from trajectorycache.utils.logging import setup_logging
 
 DENSITIES   = [50, 100, 200, 400, 600]
-SEEDS_FAST  = [84810, 15592, 4278, 98196, 37048]
+PAPER_SEEDS = [84810, 15592, 4278, 98196, 37048, 33098, 30256, 19289, 97530, 14434]
 
 
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--config", type=Path, default=Path("configs/simulation.yaml"))
     p.add_argument("--output", type=Path, default=Path("experiments/results/density"))
-    p.add_argument("--seeds",  type=int, nargs="+", default=SEEDS_FAST)
+    p.add_argument("--seeds",  type=int, nargs="+", default=PAPER_SEEDS)
     return p.parse_args()
 
 

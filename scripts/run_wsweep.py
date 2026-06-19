@@ -28,14 +28,14 @@ from trajectorycache.utils.config import load_config
 from trajectorycache.utils.logging import setup_logging
 
 W_VALUES = [0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
-DEFAULT_SEEDS = [84810, 15592, 4278, 98196, 37048]   # 5 seeds for speed
+PAPER_SEEDS = [84810, 15592, 4278, 98196, 37048, 33098, 30256, 19289, 97530, 14434]
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="W-sweep for TrajectoryCache")
     p.add_argument("--config", type=Path, default=Path("configs/simulation.yaml"))
-    p.add_argument("--output", type=Path, default=Path("experiments/results"))
-    p.add_argument("--seeds", type=int, nargs="+", default=DEFAULT_SEEDS)
+    p.add_argument("--output", type=Path, default=Path("experiments/results/wsweep"))
+    p.add_argument("--seeds", type=int, nargs="+", default=PAPER_SEEDS)
     p.add_argument("--w-values", type=float, nargs="+", default=W_VALUES)
     return p.parse_args()
 
@@ -45,6 +45,8 @@ def main() -> None:
     setup_logging(level="WARNING")
 
     cfg = load_config(args.config)
+    cfg.platoon_size = 10  # Enforce platooning condition to match run_multiseed
+    
     print(f"\nW-sweep | alpha={cfg.zipf_alpha} | seeds={args.seeds}")
     print(f"W values: {args.w_values}\n")
 
