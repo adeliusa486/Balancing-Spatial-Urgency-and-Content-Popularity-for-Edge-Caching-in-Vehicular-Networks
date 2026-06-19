@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim AS base
+FROM python:3.10.14-slim-bookworm AS base
 
 LABEL maintainer="trajectorycache-authors"
 LABEL description="Spatial-urgency-aware vehicular edge cache"
