@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "trajectorycache"
@@ -50,7 +50,7 @@ all = ["trajectorycache[dev,viz]"]
 
 [project.scripts]
 tc-benchmark = "trajectorycache.evaluation.benchmark:run_benchmark"
-tc-api       = "uvicorn trajectorycache.api.app:app --reload"
+tc-api       = "trajectorycache.api.app:run_api"
 
 [tool.setuptools.packages.find]
 where = ["src"]

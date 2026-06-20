@@ -25,6 +25,8 @@ from trajectorycache import TrajectoryCache, build_cache
 from trajectorycache.evaluation.benchmark import run_benchmark
 from trajectorycache.simulation.runner import SimulationConfig
 
+import uvicorn
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -171,3 +173,8 @@ def get_results() -> dict:
             status_code=404, detail="No results yet. POST /simulation/run first."
         )
     return {"results": _last_results}
+
+
+def run_api() -> None:
+    """CLI entrypoint to start the FastAPI server."""
+    uvicorn.run("trajectorycache.api.app:app", host="0.0.0.0", port=8000, reload=True)
