@@ -1,6 +1,4 @@
-# TrajectoryCache
-
-Spatial-urgency-aware edge cache replacement for highly mobile vehicular networks (V2X / MEC).
+# Balancing Spatial Urgency and Content Popularity for Edge Caching in Vehicular Networks
 
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
@@ -168,7 +166,14 @@ TrajectoryCache outperforms the baselines under bursty, platooning conditions (W
 
 ## Reproducibility Guide
 
-To regenerate every result, statistic, and figure from the paper identically, execute the provided makefile targets:
+To regenerate every result, statistic, and figure from the paper identically, execute the provided makefile targets. 
+
+### System Requirements (Reviewer Information)
+- **Hardware:** A standard multi-core desktop CPU (e.g., Intel Core i5/i7 or AMD Ryzen) with at least 8 GB of RAM. No GPU or specialized AI accelerators are required.
+- **Software:** Python 3.10+ running on Linux, macOS, or Windows (via WSL or native).
+- **Execution Time:** The complete `make pipeline` sweeps through 10 stochastic seeds across all policies and density configurations. Execution takes approximately 10-15 minutes on a standard modern CPU.
+
+### Full Execution Pipeline
 
 ```bash
 make pipeline
