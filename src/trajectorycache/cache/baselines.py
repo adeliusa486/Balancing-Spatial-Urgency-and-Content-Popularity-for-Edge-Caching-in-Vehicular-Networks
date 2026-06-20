@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Optional
 
 import numpy as np
 
@@ -76,7 +75,7 @@ class RandomCache(BaseCache):
 
     name: str = "Random"
 
-    def __init__(self, capacity: int, seed: Optional[int] = None) -> None:
+    def __init__(self, capacity: int, seed: int | None = None) -> None:
         super().__init__(capacity)
         self._rng = np.random.default_rng(seed)
 

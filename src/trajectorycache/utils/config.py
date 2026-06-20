@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 
@@ -19,14 +19,14 @@ from ..simulation.runner import SimulationConfig
 logger = logging.getLogger(__name__)
 
 
-def load_config(path: Optional[Path] = None) -> SimulationConfig:
+def load_config(path: Path | None = None) -> SimulationConfig:
     """
     Load SimulationConfig from a YAML file.
 
     Falls back to defaults if path is None or file is missing.
     Environment variables with prefix ``TC_`` override file values.
     """
-    raw: Dict[str, Any] = {}
+    raw: dict[str, Any] = {}
 
     if path and Path(path).exists():
         with open(path) as fh:

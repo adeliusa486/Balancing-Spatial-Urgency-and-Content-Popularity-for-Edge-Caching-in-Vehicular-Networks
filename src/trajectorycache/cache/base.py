@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Dict, Optional
+from dataclasses import dataclass
 
 
 @dataclass
@@ -30,7 +29,7 @@ class BaseCache(ABC):
         if capacity <= 0:
             raise ValueError(f"Cache capacity must be positive; got {capacity}")
         self.capacity = capacity
-        self._cache: Dict[int, CacheItem] = {}
+        self._cache: dict[int, CacheItem] = {}
         self._hits = 0
         self._misses = 0
 
@@ -95,7 +94,7 @@ class BaseCache(ABC):
         self._hits = 0
         self._misses = 0
 
-    def items(self) -> Dict[int, CacheItem]:
+    def items(self) -> dict[int, CacheItem]:
         """Return a view of the current cache contents."""
         return dict(self._cache)
 

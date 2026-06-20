@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from trajectorycache.cache import TrajectoryCache
-from trajectorycache.cache.base import CacheItem
 
 # ---------------------------------------------------------------------------
 # Fixtures

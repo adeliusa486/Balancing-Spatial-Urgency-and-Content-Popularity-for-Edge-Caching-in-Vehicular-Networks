@@ -14,18 +14,16 @@ GET  /simulation/results      - retrieve last benchmark results
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from trajectorycache import TrajectoryCache, build_cache
+from trajectorycache import TrajectoryCache
 from trajectorycache.evaluation.benchmark import run_benchmark
 from trajectorycache.simulation.runner import SimulationConfig
-
-import uvicorn
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +48,7 @@ app.add_middleware(
 
 # Singleton cache (overrideable via /cache/configure)
 _cache: TrajectoryCache = TrajectoryCache(capacity=20, urgency_weight=0.5)
-_last_results: Optional[Dict[str, Any]] = None
+_last_results: dict[str, Any] | None = None
 
 # ---------------------------------------------------------------------------
 # Schemas
@@ -67,8 +65,8 @@ class CacheRequestBody(BaseModel):
     item_id: int
     item_location: float
     current_time: float
-    vehicles: List[VehicleSchema] = []
-    catalog: Dict[int, float] = {}
+    vehicles: list[VehicleSchema] = []
+    catalog: dict[int, float] = {}
 
 
 class ConfigureBody(BaseModel):
@@ -85,7 +83,7 @@ class BenchmarkBody(BaseModel):
     n_vehicles: int = Field(50, ge=1)
     cache_capacity: int = Field(20, ge=1)
     n_items: int = Field(200, ge=1)
-    seed: Optional[int] = 42
+    seed: int | None = 42
 
 
 # ---------------------------------------------------------------------------

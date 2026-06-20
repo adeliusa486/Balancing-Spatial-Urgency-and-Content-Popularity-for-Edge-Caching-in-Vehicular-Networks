@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +23,8 @@ def _check_matplotlib() -> bool:
 
 
 def plot_hit_rates(
-    per_step_data: Dict[str, List[float]],
-    output_path: Optional[Path] = None,
+    per_step_data: dict[str, list[float]],
+    output_path: Path | None = None,
     title: str = "Per-Step Hit Rate Comparison",
 ) -> None:
     """
@@ -64,8 +63,8 @@ def plot_hit_rates(
 
 
 def plot_bar_comparison(
-    hit_rates: Dict[str, float],
-    output_path: Optional[Path] = None,
+    hit_rates: dict[str, float],
+    output_path: Path | None = None,
     title: str = "Cache Hit Rate by Policy",
 ) -> None:
     """Bar chart comparing final hit rates across policies."""

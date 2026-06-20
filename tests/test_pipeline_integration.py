@@ -4,8 +4,9 @@ Runs a 2-seed mini-benchmark (fast; not for paper results).
 """
 
 import json
-import subprocess
 import pathlib
+import subprocess
+
 import pytest
 
 

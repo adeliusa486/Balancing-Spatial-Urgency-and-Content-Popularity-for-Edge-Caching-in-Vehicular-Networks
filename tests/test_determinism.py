@@ -1,7 +1,6 @@
-import pytest
-from trajectorycache.simulation.runner import SimulationRunner, SimulationConfig
-from trajectorycache.cache.baselines import LFUCache, RandomCache
+from trajectorycache.cache.baselines import RandomCache
 from trajectorycache.cache.trajectory import TrajectoryCache
+from trajectorycache.simulation.runner import SimulationConfig, SimulationRunner
 
 
 def test_determinism_trajectory_cache():

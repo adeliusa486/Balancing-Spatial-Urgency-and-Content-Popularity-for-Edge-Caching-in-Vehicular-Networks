@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
 
 from trajectorycache import TrajectoryCache, build_cache, run_benchmark
-from trajectorycache.evaluation.metrics import compute_metrics, save_results
+from trajectorycache.evaluation.metrics import save_results
 from trajectorycache.simulation.runner import SimulationConfig, SimulationRunner
 
 # ---------------------------------------------------------------------------

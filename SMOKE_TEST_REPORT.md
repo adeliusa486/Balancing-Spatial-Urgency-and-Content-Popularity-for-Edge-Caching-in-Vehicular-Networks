@@ -5,13 +5,13 @@
 
 | Test | Status | Time (ms) |
 |------|--------|-----------|
-| Core imports | ✅ PASS | 186.0 |
-| Basic cache operation | ✅ PASS | 0.0 |
-| Config loading (YAML) | ✅ PASS | 41.0 |
-| Simulation run | ✅ PASS | 36.0 |
-| Full benchmark | ✅ PASS | 29.0 |
-| API startup | ✅ PASS | 787.0 |
-| API request cycle | ✅ PASS | 17.0 |
+| Core imports | [PASS] PASS | 145.0 |
+| Basic cache operation | [PASS] PASS | 0.0 |
+| Config loading (YAML) | [PASS] PASS | 61.0 |
+| Simulation run | [PASS] PASS | 567.0 |
+| Full benchmark | [PASS] PASS | 115.0 |
+| API startup | [PASS] PASS | 1355.0 |
+| API request cycle | [PASS] PASS | 9.0 |
 
 ## Environment
 

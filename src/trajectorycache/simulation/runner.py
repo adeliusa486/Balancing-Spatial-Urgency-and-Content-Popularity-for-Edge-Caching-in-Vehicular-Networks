@@ -7,7 +7,6 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Type
 
 from ..cache.base import BaseCache
 from ..content.catalog import ContentCatalog
@@ -38,7 +37,7 @@ class SimulationConfig:
     # Simulation
     n_steps: int = 1_000
     warmup_steps: int = 100
-    seed: Optional[int] = 42
+    seed: int | None = 42
 
     # Cache
     cache_capacity: int = 20
@@ -55,7 +54,7 @@ class SimulationResult:
     hit_rate: float
     miss_rate: float
     duration_s: float
-    per_step_hit_rate: List[float] = field(default_factory=list)
+    per_step_hit_rate: list[float] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -81,12 +80,13 @@ class SimulationRunner:
         Simulation parameters.
     """
 
-    def __init__(self, cache: BaseCache, config: Optional[SimulationConfig] = None) -> None:
+    def __init__(self, cache: BaseCache, config: SimulationConfig | None = None) -> None:
         self.cache = cache
         self.cfg = config or SimulationConfig()
 
         if self.cfg.seed is not None:
             import random
+
             import numpy as np
 
             random.seed(self.cfg.seed)
@@ -116,7 +116,7 @@ class SimulationRunner:
         """Execute the full simulation and return aggregated results."""
         self.cache.clear()
         location_map = self.catalog.location_map()
-        per_step_hit_rate: List[float] = []
+        per_step_hit_rate: list[float] = []
         wall_start = time.perf_counter()
 
         total_steps = self.cfg.warmup_steps + self.cfg.n_steps

@@ -11,10 +11,10 @@ popularity is a sliding-window request count normalized across cache items.
 from __future__ import annotations
 
 import logging
-import time
 import threading
+import time
 from collections import defaultdict, deque
-from typing import Dict, List, Optional, Set, Tuple, Any
+from typing import Any
 
 from .base import BaseCache, CacheItem
 
@@ -69,12 +69,12 @@ class TrajectoryCache(BaseCache):
         self.r_rel = r_rel
 
         # Popularity: {item_id -> deque of request timestamps}
-        self._req_times: Dict[int, deque] = defaultdict(deque)
+        self._req_times: dict[int, deque] = defaultdict(deque)
         self._lock = threading.Lock()
 
         # Step-level memoization for urgency
         self._last_t = -1.0
-        self._urgency_cache: Dict[float, float] = {}
+        self._urgency_cache: dict[float, float] = {}
 
     # ------------------------------------------------------------------
     # Public API
@@ -85,8 +85,8 @@ class TrajectoryCache(BaseCache):
         item_id: int,
         item_location: float,
         current_time: float,
-        vehicles: Optional[List[dict]] = None,
-        catalog: Optional[Dict[int, float]] = None,
+        vehicles: list[dict] | None = None,
+        catalog: dict[int, float] | None = None,
         **kwargs: Any,
     ) -> bool:
         """
@@ -131,7 +131,7 @@ class TrajectoryCache(BaseCache):
         self._fetch_from_backhaul(item_id, item_location, current_time, vehicles, catalog)
         return False
 
-    def evict(self) -> Optional[int]:
+    def evict(self) -> int | None:
         """Force-evict the lowest-scoring cached item (used by tests)."""
         if not self._cache:
             return None
@@ -150,8 +150,8 @@ class TrajectoryCache(BaseCache):
         new_id: int,
         new_loc: float,
         t: float,
-        vehicles: List[dict],
-        catalog: Dict[int, float],
+        vehicles: list[dict],
+        catalog: dict[int, float],
     ) -> None:
         """Insert the newly fetched item, evicting if cache is full."""
         if len(self._cache) < self.capacity:
@@ -195,10 +195,10 @@ class TrajectoryCache(BaseCache):
 
     def _score_all(
         self,
-        catalog: Dict[int, float],
-        vehicles: List[dict],
+        catalog: dict[int, float],
+        vehicles: list[dict],
         t: float,
-    ) -> Dict[int, float]:
+    ) -> dict[int, float]:
         """
         Compute composite Score(f) for every item in *catalog* (= C+).
 
@@ -228,17 +228,19 @@ class TrajectoryCache(BaseCache):
         pop_norm = {fid: pop_counts[fid] / denom for fid in catalog}
 
         # --- Composite score ---
-        scores: Dict[int, float] = {}
+        scores: dict[int, float] = {}
         for fid in catalog:
             scores[fid] = self.W * urgency_norm[fid] + (1.0 - self.W) * pop_norm[fid]
         return scores
 
-    def _score_all_cached(self, vehicles: List[dict], current_time: float = 0.0) -> Dict[int, float]:
+    def _score_all_cached(
+        self, vehicles: list[dict], current_time: float = 0.0
+    ) -> dict[int, float]:
         """Score only items currently in the cache (no new item in C+)."""
         catalog = {fid: item.location for fid, item in self._cache.items()}
         return self._score_all(catalog, vehicles, current_time)
 
-    def _raw_urgency(self, item_loc: float, vehicles: List[dict], t: float) -> float:
+    def _raw_urgency(self, item_loc: float, vehicles: list[dict], t: float) -> float:
         """
         U_raw(f) = Sum u(v, f)  for vehicles whose predicted position falls
         within r_rel of item_loc.
@@ -275,7 +277,7 @@ class TrajectoryCache(BaseCache):
         return total
 
     @staticmethod
-    def _min_max_normalize(raw: Dict[int, float]) -> Dict[int, float]:
+    def _min_max_normalize(raw: dict[int, float]) -> dict[int, float]:
         """Min-max normalize a dict of raw scores into [0, 1]."""
         if not raw:
             return {}
@@ -297,10 +299,10 @@ class TrajectoryCache(BaseCache):
 
     def get_scores(
         self,
-        vehicles: List[dict],
+        vehicles: list[dict],
         t: float,
-        new_item: Optional[Tuple[int, float]] = None,
-    ) -> Dict[int, float]:
+        new_item: tuple[int, float] | None = None,
+    ) -> dict[int, float]:
         """
         Return current composite scores for all cached items.
         Optionally include a candidate new item (id, location).
@@ -310,7 +312,7 @@ class TrajectoryCache(BaseCache):
             catalog[new_item[0]] = new_item[1]
         return self._score_all(catalog, vehicles, t)
 
-    def popularity_counts(self) -> Dict[int, int]:
+    def popularity_counts(self) -> dict[int, int]:
         """Return sliding-window request counts for all tracked items."""
         with self._lock:
             return {k: len(v) for k, v in self._req_times.items() if v}

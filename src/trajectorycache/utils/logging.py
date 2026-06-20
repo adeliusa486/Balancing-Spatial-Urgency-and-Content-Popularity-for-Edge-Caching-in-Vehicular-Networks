@@ -5,12 +5,11 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def setup_logging(
     level: str = "INFO",
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     fmt: str = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
 ) -> None:
     """

@@ -6,13 +6,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from ..cache import build_cache
 from ..simulation.runner import SimulationConfig, SimulationResult, SimulationRunner
 from .metrics import (
     EvalMetrics,
-    compare_policies,
     compute_metrics,
     print_comparison_table,
     save_results,
@@ -31,11 +29,11 @@ DEFAULT_POLICIES = [
 
 
 def run_benchmark(
-    config: Optional[SimulationConfig] = None,
-    policies: Optional[List[tuple]] = None,
-    output_dir: Optional[Path] = None,
+    config: SimulationConfig | None = None,
+    policies: list[tuple] | None = None,
+    output_dir: Path | None = None,
     verbose: bool = False,
-) -> Dict[str, EvalMetrics]:
+) -> dict[str, EvalMetrics]:
     """
     Run all policies under identical simulation conditions.
 
@@ -54,7 +52,7 @@ def run_benchmark(
     """
     cfg = config or SimulationConfig()
     policy_list = policies or DEFAULT_POLICIES
-    all_metrics: List[EvalMetrics] = []
+    all_metrics: list[EvalMetrics] = []
 
     for policy_name, policy_kwargs in policy_list:
         logger.info("Benchmarking policy: %s", policy_name)

@@ -9,8 +9,8 @@ assumption in caching literature.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Dict, Iterator, List, Optional, Tuple
 
 import numpy as np
 
@@ -49,7 +49,7 @@ class ContentCatalog:
         road_length: float = 10_000.0,
         active_zone_length: float = 1600.0,
         zipf_alpha: float = 1.2,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         self.n_items = n_items
         self.road_length = road_length
@@ -57,12 +57,12 @@ class ContentCatalog:
         self.zipf_alpha = zipf_alpha
         self._rng = np.random.default_rng(seed)
 
-        self._items: Dict[int, ContentItem] = self._build_catalog()
+        self._items: dict[int, ContentItem] = self._build_catalog()
         self._popularity_weights = self._build_zipf_weights()
 
     # ------------------------------------------------------------------
 
-    def _build_catalog(self) -> Dict[int, ContentItem]:
+    def _build_catalog(self) -> dict[int, ContentItem]:
         start_loc = (self.road_length - self.active_zone_length) / 2.0
         end_loc = start_loc + self.active_zone_length
         locations = self._rng.uniform(start_loc, end_loc, size=self.n_items)
@@ -82,9 +82,9 @@ class ContentCatalog:
 
     def generate_vehicle_requests(
         self,
-        vehicles: List[dict],
+        vehicles: list[dict],
         r_request: float = 800.0,
-    ) -> List["ContentItem"]:
+    ) -> list[ContentItem]:
         """
         Generate requests driven by vehicle positions.
 
@@ -101,7 +101,7 @@ class ContentCatalog:
         r_request : float
             Look-ahead distance in metres.
         """
-        requests: List[ContentItem] = []
+        requests: list[ContentItem] = []
         for veh in vehicles:
             x_v = veh["x"]
             direction = veh.get("direction", 1)
@@ -129,7 +129,7 @@ class ContentCatalog:
 
         return requests
 
-    def generate_requests(self, n_requests: int) -> List["ContentItem"]:
+    def generate_requests(self, n_requests: int) -> list[ContentItem]:
         """Generate n_requests items drawn from Zipf popularity (legacy API)."""
         indices = self._rng.choice(self.n_items, size=n_requests, p=self._popularity_weights)
         return [self._items[int(i)] for i in indices]
@@ -138,7 +138,7 @@ class ContentCatalog:
         """Look up a content item by ID."""
         return self._items[item_id]
 
-    def location_map(self) -> Dict[int, float]:
+    def location_map(self) -> dict[int, float]:
         """Return {item_id: location} for all catalog items."""
         return {iid: item.location for iid, item in self._items.items()}
 

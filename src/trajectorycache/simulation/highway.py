@@ -9,9 +9,8 @@ TrajectoryCache to compute spatial urgency.
 from __future__ import annotations
 
 import logging
-import random
-from dataclasses import dataclass, field
-from typing import Iterator, List, Optional
+from collections.abc import Iterator
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -71,7 +70,7 @@ class HighwaySimulation:
         speed_std: float = 5.0,
         platoon_size: int = 10,
         platoon_gap: float = 30.0,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         self.road_length = road_length
         self.n_vehicles = n_vehicles
@@ -85,11 +84,11 @@ class HighwaySimulation:
         rng = np.random.default_rng(seed)
         self._rng = rng
 
-        self.vehicles: List[Vehicle] = self._spawn_vehicles(rng)
+        self.vehicles: list[Vehicle] = self._spawn_vehicles(rng)
 
     # ------------------------------------------------------------------
 
-    def _spawn_vehicles(self, rng: np.random.Generator) -> List[Vehicle]:
+    def _spawn_vehicles(self, rng: np.random.Generator) -> list[Vehicle]:
         """
         Spawn vehicles in platoons.
 
@@ -136,7 +135,7 @@ class HighwaySimulation:
 
         return vehicles
 
-    def step(self) -> List[dict]:
+    def step(self) -> list[dict]:
         """Advance simulation by one dt and return current vehicle states."""
         self.t += self.dt
         for veh in self.vehicles:
@@ -148,13 +147,13 @@ class HighwaySimulation:
                 veh.x = veh.x - self.road_length
         return [v.to_dict() for v in self.vehicles]
 
-    def run(self, n_steps: int) -> Iterator[tuple[float, List[dict]]]:
+    def run(self, n_steps: int) -> Iterator[tuple[float, list[dict]]]:
         """Yield (timestamp, vehicle_states) for each step."""
         for _ in range(n_steps):
             states = self.step()
             yield self.t, states
 
-    def snapshot(self) -> List[dict]:
+    def snapshot(self) -> list[dict]:
         """Return current vehicle states without advancing time."""
         return [v.to_dict() for v in self.vehicles]
 

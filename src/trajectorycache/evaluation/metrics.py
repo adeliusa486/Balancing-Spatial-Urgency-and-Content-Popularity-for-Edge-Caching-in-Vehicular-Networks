@@ -11,7 +11,6 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -59,7 +58,7 @@ def compute_metrics(result: SimulationResult) -> EvalMetrics:
     )
 
 
-def compare_policies(metrics: List[EvalMetrics]) -> Dict[str, dict]:
+def compare_policies(metrics: list[EvalMetrics]) -> dict[str, dict]:
     """
     Build a comparison dict ranked by hit_rate (descending).
 
@@ -72,7 +71,7 @@ def compare_policies(metrics: List[EvalMetrics]) -> Dict[str, dict]:
     return {m.policy: m.to_dict() for m in ranked}
 
 
-def print_comparison_table(metrics: List[EvalMetrics]) -> None:
+def print_comparison_table(metrics: list[EvalMetrics]) -> None:
     """Pretty-print a comparison table to stdout."""
     header = f"{'Policy':<20} {'Hit Rate':>10} {'Miss Rate':>10} {'Requests':>10} {'Duration(s)':>12}"
     sep = "-" * len(header)
@@ -88,7 +87,7 @@ def print_comparison_table(metrics: List[EvalMetrics]) -> None:
     print(sep)
 
 
-def save_results(metrics: List[EvalMetrics], output_path: Path) -> None:
+def save_results(metrics: list[EvalMetrics], output_path: Path) -> None:
     """Persist metrics list to JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     data = [m.to_dict() for m in metrics]
@@ -97,7 +96,7 @@ def save_results(metrics: List[EvalMetrics], output_path: Path) -> None:
     logger.info("Results saved to %s", output_path)
 
 
-def load_results(path: Path) -> List[EvalMetrics]:
+def load_results(path: Path) -> list[EvalMetrics]:
     """Load previously saved metrics from JSON."""
     with open(path) as fh:
         data = json.load(fh)
