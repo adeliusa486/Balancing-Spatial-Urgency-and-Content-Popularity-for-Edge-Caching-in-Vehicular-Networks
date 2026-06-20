@@ -2,7 +2,6 @@
 
 **Spatial-urgency-aware edge cache replacement for highly mobile vehicular networks (V2X / MEC)**
 
-[![CI](https://github.com/adeliusa486/TrajectoryCache/actions/workflows/ci.yml/badge.svg)](https://github.com/adeliusa486/TrajectoryCache/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
