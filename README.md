@@ -215,22 +215,6 @@ TrajectoryCache/
 └── paper/               # Final Elsevier LaTeX source and compiled PDF
 ```
 
----
-
-## Citation
-
-If you utilize TrajectoryCache or its simulation framework in your research, please cite our work:
-
-```bibtex
-@article{Ahmad2026TrajectoryCache,
-  title={Balancing Spatial Urgency and Content Popularity for Edge Caching in Vehicular Networks},
-  journal={Vehicular Communications},
-  year={2026},
-  publisher={Elsevier}
-}
-```
-
----
 
 ## License
 
